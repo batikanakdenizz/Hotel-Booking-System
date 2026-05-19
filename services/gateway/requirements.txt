@@ -1,0 +1,5 @@
+# Gateway requirements — Phase 0
+# Real routing/JWT/rate-limit deps come in Phase 8.
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+-e ../shared

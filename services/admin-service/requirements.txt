@@ -1,0 +1,5 @@
+# Admin service requirements — Phase 0
+# Postgres + Redis (for cache invalidation) deps come in Phase 3.
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+-e ../shared[postgres,redis,firebase]

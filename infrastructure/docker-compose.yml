@@ -1,0 +1,197 @@
+# ============================================================
+# Hotel Booking System — Local Development Stack
+# ============================================================
+# Brings up: Postgres + MongoDB + Redis + RabbitMQ + 7 services.
+# Usage from repo root:
+#   docker compose -f infrastructure/docker-compose.yml --env-file .env up --build
+# ============================================================
+name: hotel-booking
+
+services:
+
+  # ----------------------------------------------------------
+  # Local datastores (replace with Supabase / Atlas / Upstash / CloudAMQP in production)
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: hbs-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hotel_booking
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    container_name: hbs-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: hbs-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: hbs-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # management UI (http://localhost:15672 — guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ----------------------------------------------------------
+  # Application services
+  # ----------------------------------------------------------
+  gateway:
+    build:
+      context: ..
+      dockerfile: services/gateway/Dockerfile
+    container_name: hbs-gateway
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      admin-service:
+        condition: service_healthy
+      search-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+      comments-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      ai-agent-service:
+        condition: service_healthy
+
+  admin-service:
+    build:
+      context: ..
+      dockerfile: services/admin-service/Dockerfile
+    container_name: hbs-admin
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: admin-service
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/hotel_booking
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  search-service:
+    build:
+      context: ..
+      dockerfile: services/search-service/Dockerfile
+    container_name: hbs-search
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: search-service
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/hotel_booking
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: ..
+      dockerfile: services/booking-service/Dockerfile
+    container_name: hbs-booking
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: booking-service
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/hotel_booking
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  comments-service:
+    build:
+      context: ..
+      dockerfile: services/comments-service/Dockerfile
+    container_name: hbs-comments
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: comments-service
+      MONGO_URL: mongodb://mongo:27017
+      MONGO_DB_NAME: hotel_booking_comments
+    ports:
+      - "8004:8004"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
+    container_name: hbs-notification
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: notification-service
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/hotel_booking
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ai-agent-service:
+    build:
+      context: ..
+      dockerfile: services/ai-agent-service/Dockerfile
+    container_name: hbs-ai-agent
+    env_file: ../.env
+    environment:
+      SERVICE_NAME: ai-agent-service
+      GATEWAY_URL: http://gateway:8080
+    ports:
+      - "8006:8006"
+
+volumes:
+  postgres-data:
+  mongo-data:

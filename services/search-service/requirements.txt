@@ -1,0 +1,4 @@
+# Search service requirements — Phase 0
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+-e ../shared[postgres,redis,firebase]

@@ -38,11 +38,9 @@ Seven backend microservices + a React frontend + an AI chat agent, all reachable
 
 ## Documentation
 
-- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — full project plan (English, primary source)
-- [`docs/PROJECT_PLAN_TR.md`](docs/PROJECT_PLAN_TR.md) — Turkish translation for reference
-- [`docs/developing_process.md`](docs/developing_process.md) — implementation journal (Turkish, learning-focused)
+- [`docs/Plan/PROJECT_PLAN.md`](docs/Plan/PROJECT_PLAN.md) — full project plan (English)
+- [`docs/Plan/PROJECT_PLAN_TR.md`](docs/Plan/PROJECT_PLAN_TR.md) — Turkish translation
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — ER diagram + design decisions (added in Phase 14)
-- [`docs/Guide/Final_Guideline.pdf`](docs/Guide/Final_Guideline.pdf) — assignment specification (primary source)
 
 ---
 

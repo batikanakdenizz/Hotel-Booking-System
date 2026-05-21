@@ -78,3 +78,6 @@ recent.md
 docs/Guide/
 docs/Lecture_Slides/
 docs/developing_process.md
+
+# --- Local secrets folder (service account JSONs, etc.) ---
+.secrets/

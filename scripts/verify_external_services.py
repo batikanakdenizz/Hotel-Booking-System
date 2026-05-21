@@ -73,6 +73,45 @@ def check_postgres_migration() -> str:
         conn.close()
 
 
+def check_firebase() -> str:
+    """Initialize firebase_admin with our service account and call a no-op API.
+
+    Validates:
+      - JSON credentials parse successfully
+      - Project ID matches what's in the credentials
+      - The service account has permission to talk to the Identity Platform API
+    """
+    import json
+    import firebase_admin
+    from firebase_admin import auth, credentials
+
+    project_id = os.environ.get("FIREBASE_PROJECT_ID")
+    sa_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH")
+    sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+    if not project_id:
+        return "skip (FIREBASE_PROJECT_ID not set)"
+
+    if sa_path:
+        sa_path_abs = sa_path if os.path.isabs(sa_path) else os.path.join(REPO_ROOT, sa_path)
+        if not os.path.isfile(sa_path_abs):
+            raise FileNotFoundError(f"FIREBASE_SERVICE_ACCOUNT_PATH points to a missing file: {sa_path_abs}")
+        cred = credentials.Certificate(sa_path_abs)
+    elif sa_json:
+        cred = credentials.Certificate(json.loads(sa_json))
+    else:
+        return "skip (neither FIREBASE_SERVICE_ACCOUNT_PATH nor _JSON set)"
+
+    # Initialize only once per process (firebase_admin is a singleton)
+    if not firebase_admin._apps:  # noqa: SLF001 — intentional probe of internal state
+        firebase_admin.initialize_app(cred, {"projectId": project_id})
+
+    # auth.list_users(max_results=1) → cheap, validates the project access
+    page = auth.list_users(max_results=1)
+    user_count_hint = "0 users" if not page.users else "≥1 user"
+    return f"ok (project={project_id}, {user_count_hint})"
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -86,8 +125,8 @@ async def _run_sync(fn: Callable[[], str]) -> str:
 CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("Postgres (runtime, transaction pooler)", check_postgres_runtime),
     ("Postgres (migration, session pooler)", lambda: _run_sync(check_postgres_migration)),
+    ("Firebase Authentication", lambda: _run_sync(check_firebase)),
     # Add more checks here as Phase 1 progresses:
-    # ("Firebase Authentication", check_firebase),
     # ("MongoDB Atlas", check_mongo),
     # ("Upstash Redis", check_redis),
     # ("CloudAMQP RabbitMQ", check_rabbitmq),

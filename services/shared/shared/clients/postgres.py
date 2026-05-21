@@ -1,15 +1,37 @@
 """Async SQLAlchemy engine + session factory for every service that touches Postgres.
 
-The critical detail: we disable asyncpg's prepared-statement cache and
-SQLAlchemy's prepared-statement cache because Supabase's transaction-mode
-pooler (Supavisor on port 6543) reuses backends across client connections.
-Without disabling, asyncpg's auto-generated `__asyncpg_stmt_N__` collides
-with the same name from a previous client. We learned this in Phase 1.5 —
-see developing_process.md §1.5 "11. ders".
+THE pooler-safety story (learned the hard way across Phase 1.5, Phase 2.8,
+and Phase 4):
+
+  Supabase's transaction-mode pooler (Supavisor on port 6543) multiplexes
+  many client connections onto fewer backend Postgres sessions. Backends
+  are recycled between clients on transaction boundaries. The problem:
+  *prepared statements are session-level* on the backend, so when a client
+  prepares ``_sqla_1`` and the pooler later hands that backend to a new
+  client, the new client's "fresh" ``_sqla_1`` collides
+  (``DuplicatePreparedStatementError``).
+
+  Two settings together make us pooler-safe:
+
+    1. ``statement_cache_size=0`` (asyncpg connect_args) — disables asyncpg's
+       own auto-named prepared statements (``__asyncpg_stmt_N__``).
+
+    2. ``prepared_statement_name_func`` (asyncpg connect_args) — gives every
+       SQLAlchemy-issued ``connection.prepare()`` a unique UUID name. Names
+       never collide no matter how the pooler shuffles backends. Each
+       prepared statement leaks one entry on its backend until session
+       close — acceptable for low-volume demos, would be revisited with
+       a stricter pool budget in production.
+
+  The ``prepared_statement_cache_size=0`` URL/engine kwarg is documented
+  but only switches whether SQLAlchemy *caches* the resulting prepared
+  statement — the dialect still calls ``prepare(..., name=_sqla_N)`` with
+  deterministic counter-based names. Insufficient on its own.
 """
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -19,42 +41,27 @@ from sqlalchemy.ext.asyncio import (
 )
 
 
+def _unique_prepared_name() -> str:
+    """Per-call unique prepared-statement name. See module docstring."""
+    return f"__asyncpg_{uuid4().hex}__"
+
+
 def create_async_engine_for_service(postgres_url: str, *, echo: bool = False) -> AsyncEngine:
     """Build the async engine with Supavisor-pooler-safe settings.
-
-    Two caches must be disabled to survive Supabase's transaction-mode pooler
-    reusing backends across clients:
-
-      1. SQLAlchemy's prepared-statement cache (dialect level). Set via URL
-         query: ``?prepared_statement_cache_size=0``. The asyncpg dialect
-         picks this up from the URL.
-
-      2. asyncpg's own statement cache (driver level). Set via ``connect_args``:
-         ``{"statement_cache_size": 0}``.
-
-    Missing either re-introduces ``DuplicatePreparedStatementError`` on the
-    second connection that lands on a previously-used backend session.
 
     Args:
         postgres_url: must start with ``postgresql+asyncpg://``
         echo: SQL logging — True only for local debug.
     """
-    # Force-append the SQLAlchemy-level cache disable to the URL.
-    sep = "&" if "?" in postgres_url else "?"
-    url_with_cache_off = (
-        postgres_url
-        if "prepared_statement_cache_size" in postgres_url
-        else f"{postgres_url}{sep}prepared_statement_cache_size=0"
-    )
-
     return create_async_engine(
-        url_with_cache_off,
+        postgres_url,
         echo=echo,
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=5,
         connect_args={
-            "statement_cache_size": 0,  # asyncpg-level cache off
+            "statement_cache_size": 0,
+            "prepared_statement_name_func": _unique_prepared_name,
         },
     )
 

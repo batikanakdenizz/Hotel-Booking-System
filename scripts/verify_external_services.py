@@ -28,7 +28,19 @@ load_dotenv(os.path.join(REPO_ROOT, ".env"))
 # --------------------------------------------------------------------------
 
 async def check_postgres_runtime() -> str:
-    """Connect to the transaction pooler and run SELECT 1."""
+    """Connect to the transaction pooler and run SELECT 1.
+
+    statement_cache_size=0 is REQUIRED because Supabase's transaction pooler
+    (Supavisor on port 6543) multiplexes client connections onto a smaller
+    pool of backend Postgres sessions. Prepared statements are session-level
+    in Postgres, so when the pooler reuses a backend that already saw an
+    asyncpg-named prepared statement from a previous client, the new client
+    gets `DuplicatePreparedStatementError`. Disabling the cache forces every
+    statement to be sent fresh (small perf hit, but transaction-pooler safe).
+
+    This same gotcha applies to our SQLAlchemy async engine in Phase 2 —
+    pass `connect_args={"prepared_statement_cache_size": 0}` there.
+    """
     import asyncpg
 
     url = os.environ.get("POSTGRES_URL")
@@ -38,7 +50,7 @@ async def check_postgres_runtime() -> str:
     # asyncpg.connect wants raw postgres://, strip the SQLAlchemy +asyncpg prefix
     asyncpg_url = url.replace("postgresql+asyncpg://", "postgresql://")
 
-    conn = await asyncpg.connect(asyncpg_url, timeout=10)
+    conn = await asyncpg.connect(asyncpg_url, timeout=10, statement_cache_size=0)
     try:
         version = await conn.fetchval("SELECT version()")
         one = await conn.fetchval("SELECT 1")
@@ -167,6 +179,60 @@ async def check_redis() -> str:
         await client.aclose()
 
 
+async def check_rabbitmq() -> str:
+    """Open an AMQP connection, publish a persistent message to an ephemeral
+    queue, consume it back, and ack. Exercises the full producer+consumer
+    pipeline that booking-service and notification-service will use.
+    """
+    import aio_pika
+
+    url = os.environ.get("RABBITMQ_URL")
+    if not url:
+        return "skip (RABBITMQ_URL not set)"
+
+    # connect_robust = the production-style client that auto-reconnects on
+    # transient drops. We use it here too so the smoke test matches reality.
+    connection = await aio_pika.connect_robust(url, timeout=15)
+    try:
+        channel = await connection.channel()
+
+        # Ephemeral queue — exclusive (only this connection) + auto-delete (vanishes
+        # when the connection closes). Keeps the CloudAMQP dashboard clean.
+        queue = await channel.declare_queue("", exclusive=True, auto_delete=True)
+
+        # Publish a persistent message via the default exchange. The default
+        # exchange routes by queue name, so routing_key == queue.name.
+        await channel.default_exchange.publish(
+            aio_pika.Message(
+                body=b"verify_external_services smoke",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            ),
+            routing_key=queue.name,
+        )
+
+        # Pull it back and ack. timeout protects us if delivery silently fails.
+        message = await queue.get(timeout=10, fail=False)
+        if message is None:
+            raise RuntimeError("message published but not received within 10s")
+        async with message.process():  # auto-acks on success, nacks on exception
+            assert message.body == b"verify_external_services smoke"
+
+        # Best-effort server version (the underlying aiormq connection exposes
+        # server_properties; RobustConnection's API path differs across versions
+        # so we tolerate AttributeError silently).
+        version = "?"
+        try:
+            underlying = getattr(connection, "_connection", None) or getattr(connection, "connection", None)
+            props = getattr(underlying, "server_properties", None) or {}
+            v = props.get("version", "?")
+            version = v.decode() if isinstance(v, (bytes, bytearray)) else v
+        except Exception:  # noqa: BLE001 — purely cosmetic, never blocks the check
+            pass
+        return f"ok (RabbitMQ {version}, publish+consume+ack ok)"
+    finally:
+        await connection.close()
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -183,8 +249,8 @@ CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("Firebase Authentication", lambda: _run_sync(check_firebase)),
     ("MongoDB Atlas", check_mongo),
     ("Upstash Redis", check_redis),
+    ("CloudAMQP RabbitMQ", check_rabbitmq),
     # Add more checks here as Phase 1 progresses:
-    # ("CloudAMQP RabbitMQ", check_rabbitmq),
     # ("Groq LLM", check_groq),
     # ("Resend Email", check_resend),
 ]

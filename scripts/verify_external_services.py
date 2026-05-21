@@ -112,6 +112,31 @@ def check_firebase() -> str:
     return f"ok (project={project_id}, {user_count_hint})"
 
 
+async def check_mongo() -> str:
+    """Open an Atlas connection with Motor (async driver) and ping the server."""
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    url = os.environ.get("MONGO_URL")
+    db_name = os.environ.get("MONGO_DB_NAME", "hotel_booking_comments")
+    if not url:
+        return "skip (MONGO_URL not set)"
+
+    # serverSelectionTimeoutMS keeps the failure mode bounded — without it Motor
+    # waits 30s before giving up on DNS/auth issues.
+    client = AsyncIOMotorClient(url, serverSelectionTimeoutMS=10000)
+    try:
+        # admin.command("ping") is the canonical MongoDB liveness check.
+        await client.admin.command("ping")
+        # server_info() gives us the version banner for nicer output.
+        info = await client.server_info()
+        # Touch the target database so we know auth covers it (free tier user
+        # has access to all DBs anyway, but this also proves the URL parses).
+        _ = await client[db_name].list_collection_names()
+        return f"ok (MongoDB {info['version']}, db={db_name})"
+    finally:
+        client.close()
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -126,8 +151,8 @@ CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("Postgres (runtime, transaction pooler)", check_postgres_runtime),
     ("Postgres (migration, session pooler)", lambda: _run_sync(check_postgres_migration)),
     ("Firebase Authentication", lambda: _run_sync(check_firebase)),
+    ("MongoDB Atlas", check_mongo),
     # Add more checks here as Phase 1 progresses:
-    # ("MongoDB Atlas", check_mongo),
     # ("Upstash Redis", check_redis),
     # ("CloudAMQP RabbitMQ", check_rabbitmq),
     # ("Groq LLM", check_groq),

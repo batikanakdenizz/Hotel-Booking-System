@@ -137,6 +137,36 @@ async def check_mongo() -> str:
         client.close()
 
 
+async def check_redis() -> str:
+    """Connect to Upstash and do a SET / GET / DEL round-trip."""
+    from redis.asyncio import Redis
+
+    url = os.environ.get("REDIS_URL")
+    if not url:
+        return "skip (REDIS_URL not set)"
+
+    client = Redis.from_url(url, socket_timeout=10, socket_connect_timeout=10)
+    try:
+        # PING — most basic liveness signal.
+        pong = await client.ping()
+        assert pong is True, f"unexpected PING reply: {pong!r}"
+
+        # Round-trip a real key with TTL to prove writes + TTL work.
+        test_key = "verify_external_services:smoke"
+        test_value = "ok"
+        await client.set(test_key, test_value, ex=60)  # 60s self-cleanup
+        got = await client.get(test_key)
+        assert got == test_value.encode(), f"GET returned {got!r}"
+        await client.delete(test_key)
+
+        # INFO server → banner with version.
+        info = await client.info(section="server")
+        version = info.get("redis_version", "?")
+        return f"ok (Redis {version}, SET/GET/DEL ok)"
+    finally:
+        await client.aclose()
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -152,8 +182,8 @@ CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("Postgres (migration, session pooler)", lambda: _run_sync(check_postgres_migration)),
     ("Firebase Authentication", lambda: _run_sync(check_firebase)),
     ("MongoDB Atlas", check_mongo),
+    ("Upstash Redis", check_redis),
     # Add more checks here as Phase 1 progresses:
-    # ("Upstash Redis", check_redis),
     # ("CloudAMQP RabbitMQ", check_rabbitmq),
     # ("Groq LLM", check_groq),
     # ("Resend Email", check_resend),

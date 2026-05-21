@@ -263,6 +263,33 @@ async def check_groq() -> str:
         return f"ok ({len(models)} models, {model} available)"
 
 
+async def check_resend() -> str:
+    """Hit Resend's GET /domains endpoint to validate the API key.
+
+    Resend doesn't charge against the 100/day quota for non-send endpoints,
+    so listing domains is the cheapest auth probe. We don't send a real
+    email here — that would (a) burn quota and (b) require a verified
+    recipient. The actual email path is exercised in Phase 7 integration
+    tests, after notification-service is wired to RabbitMQ.
+    """
+    import httpx
+
+    api_key = os.environ.get("RESEND_API_KEY")
+    if not api_key:
+        return "skip (RESEND_API_KEY not set)"
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r = await client.get("https://api.resend.com/domains", headers=headers)
+        if r.status_code == 401:
+            raise RuntimeError("401 Unauthorized — API key rejected by Resend")
+        r.raise_for_status()
+        payload = r.json()
+        domains = payload.get("data", []) if isinstance(payload, dict) else payload
+        verified = sum(1 for d in domains if d.get("status") == "verified")
+        return f"ok ({len(domains)} domain(s), {verified} verified; using EMAIL_FROM={os.environ.get('EMAIL_FROM', '?')})"
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -281,8 +308,7 @@ CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("Upstash Redis", check_redis),
     ("CloudAMQP RabbitMQ", check_rabbitmq),
     ("Groq LLM", check_groq),
-    # Add more checks here as Phase 1 progresses:
-    # ("Resend Email", check_resend),
+    ("Resend Email", check_resend),
 ]
 
 

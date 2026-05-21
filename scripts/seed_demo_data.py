@@ -274,6 +274,38 @@ async def seed(session: AsyncSession) -> None:
     print(f"[seed] sample bookings (on {USER_EMAIL}): {sample_size}")
 
 
+async def _flush_search_cache() -> None:
+    """Drop hotel:* and destination:* keys in Redis.
+
+    The seed script bypasses admin-service (writes to Postgres directly with
+    fresh UUIDs), so the destination -> hotel_ids index and any cached hotel
+    detail payloads in Redis would point at deleted rows. Search-service
+    would then return 0 results until the destination TTL (6h) expires.
+    Flushing here keeps the dev loop fast.
+    """
+    redis_url = os.environ.get("REDIS_URL")
+    if not redis_url:
+        return
+    try:
+        import redis.asyncio as redis_aio
+    except ImportError:
+        print("[seed] redis package missing — skipping cache flush")
+        return
+
+    r = redis_aio.Redis.from_url(redis_url)
+    try:
+        deleted = 0
+        async for k in r.scan_iter(match="hotel:*"):
+            await r.delete(k)
+            deleted += 1
+        async for k in r.scan_iter(match="destination:*"):
+            await r.delete(k)
+            deleted += 1
+        print(f"[seed] flushed {deleted} stale cache keys (hotel:*, destination:*)")
+    finally:
+        await r.aclose()
+
+
 async def main() -> None:
     engine = create_async_engine_for_service(os.environ["POSTGRES_URL"])
     SessionFactory = create_session_factory(engine)
@@ -283,6 +315,7 @@ async def main() -> None:
             await wipe_demo_rows(session)
             print("[seed] seeding fresh dataset ...")
             await seed(session)
+        await _flush_search_cache()
         print("\n[seed] DONE.")
         print(f"[seed] Admin login: {ADMIN_EMAIL} (role=hotel_admin, firebase_uid=seed-admin-placeholder)")
         print(f"[seed] User login:  {USER_EMAIL}  (role=user, firebase_uid=seed-user-placeholder)")

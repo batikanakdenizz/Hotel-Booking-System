@@ -233,6 +233,36 @@ async def check_rabbitmq() -> str:
         await connection.close()
 
 
+async def check_groq() -> str:
+    """Hit Groq's OpenAI-compatible /models endpoint to validate the API key.
+
+    Listing models doesn't burn chat-completion rate limit (30 rpm) and still
+    proves the key authenticates. We also verify the configured GROQ_MODEL is
+    actually in the catalog — if Groq retires a model and we don't notice, the
+    agent breaks silently at chat time. This catches it early.
+    """
+    import httpx
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    model = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+    if not api_key:
+        return "skip (GROQ_API_KEY not set)"
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.get("https://api.groq.com/openai/v1/models", headers=headers)
+        if r.status_code == 401:
+            raise RuntimeError("401 Unauthorized — API key rejected by Groq")
+        r.raise_for_status()
+        data = r.json()
+        models = sorted(m["id"] for m in data.get("data", []))
+        if not models:
+            raise RuntimeError("API returned empty model list — account probably not provisioned")
+        if model not in models:
+            return f"warn (auth ok, but configured GROQ_MODEL={model!r} not in catalog of {len(models)} models)"
+        return f"ok ({len(models)} models, {model} available)"
+
+
 # Async wrappers so we can run everything from one event loop ---------------
 
 async def _run_sync(fn: Callable[[], str]) -> str:
@@ -250,8 +280,8 @@ CHECKS: list[tuple[str, Callable[[], Awaitable[str]]]] = [
     ("MongoDB Atlas", check_mongo),
     ("Upstash Redis", check_redis),
     ("CloudAMQP RabbitMQ", check_rabbitmq),
+    ("Groq LLM", check_groq),
     # Add more checks here as Phase 1 progresses:
-    # ("Groq LLM", check_groq),
     # ("Resend Email", check_resend),
 ]
 

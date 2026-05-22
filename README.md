@@ -25,7 +25,7 @@ A production-grade, microservice-based hotel booking platform.
 > first click during the grading window is instant. After that date the
 > first request takes ~30 s to wake the containers.
 
-![alt text](image-1.png)
+docs/screenshots/Home.png
 <p align="center">
   <img src="docs/screenshots/01-home.png" alt="Home page" width="900" />
 </p>

@@ -1,9 +1,33 @@
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin, CalendarDays, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+
+// Canonical list mirrors `scripts/seed_demo_data.py` so picking from the
+// dropdown always sends a destination string the backend can match.
+const KNOWN_DESTINATIONS = [
+  "Barcelona",
+  "Bodrum",
+  "Istanbul",
+  "New York",
+  "Paris",
+  "Rome",
+  "Tokyo",
+];
+
+// Accent/case/dotless-I-tolerant normalisation. Maps İstanbul/istanbul/İSTANBUL
+// to the same key so the user sees a hit no matter how they typed it.
+function _normalize(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")  // strip combining diacritics
+    .replace(/[ıİ]/g, "i")            // Turkish dotless/dotted I -> i
+    .toLowerCase()
+    .trim();
+}
 
 const Schema = z
   .object({
@@ -31,7 +55,7 @@ function todayISO(offset = 0): string {
 
 export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm<Values>({
+  const { register, handleSubmit, formState: { errors }, control, setValue } = useForm<Values>({
     resolver: zodResolver(Schema),
     defaultValues: {
       destination: initial?.destination ?? "",
@@ -42,8 +66,12 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
   });
 
   const onSubmit = (v: Values) => {
+    // Always submit the canonical spelling -- map whatever the user typed
+    // back to the matching entry in KNOWN_DESTINATIONS when possible.
+    const canonical =
+      KNOWN_DESTINATIONS.find((d) => _normalize(d) === _normalize(v.destination)) ?? v.destination;
     const qs = new URLSearchParams({
-      destination: v.destination,
+      destination: canonical,
       check_in: v.check_in,
       check_out: v.check_out,
       guests: String(v.guests),
@@ -62,13 +90,18 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
           : "bg-white border border-slate-200 rounded-xl p-2 grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto] gap-2 items-stretch"
       }
     >
-      <Field icon={<MapPin className="h-4 w-4" />} label="Destination" error={errors.destination?.message}>
-        <input
-          {...register("destination")}
-          placeholder="Rome, Paris, Istanbul..."
-          className="w-full bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
-        />
-      </Field>
+      <Controller
+        control={control}
+        name="destination"
+        render={({ field }) => (
+          <DestinationField
+            value={field.value}
+            onChange={field.onChange}
+            onPick={(city) => setValue("destination", city, { shouldValidate: true })}
+            error={errors.destination?.message}
+          />
+        )}
+      />
       <Field icon={<CalendarDays className="h-4 w-4" />} label="Check-in" error={errors.check_in?.message}>
         <input type="date" {...register("check_in")} className="w-full bg-transparent text-sm font-medium focus:outline-none" />
       </Field>
@@ -88,6 +121,114 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
         <Search className="h-5 w-5" /> Search
       </Button>
     </form>
+  );
+}
+
+interface DestinationFieldProps {
+  value: string;
+  onChange: (v: string) => void;
+  onPick: (city: string) => void;
+  error?: string;
+}
+
+function DestinationField({ value, onChange, onPick, error }: DestinationFieldProps) {
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const suggestions = useMemo(() => {
+    const q = _normalize(value);
+    if (!q) return KNOWN_DESTINATIONS;          // show all when empty
+    return KNOWN_DESTINATIONS.filter((d) => _normalize(d).includes(q));
+  }, [value]);
+
+  // Close on outside click.
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  // Reset highlight when suggestion list changes.
+  useEffect(() => {
+    setHighlight(0);
+  }, [suggestions.length]);
+
+  function commit(city: string) {
+    onPick(city);
+    setOpen(false);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlight((h) => (h + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlight((h) => (h - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      commit(suggestions[highlight]);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <Field icon={<MapPin className="h-4 w-4" />} label="Destination" error={error}>
+        <input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
+          placeholder="Rome, Paris, Istanbul..."
+          autoComplete="off"
+          spellCheck={false}
+          className="w-full bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
+        />
+      </Field>
+      {open && suggestions.length > 0 && (
+        <ul
+          role="listbox"
+          className="absolute left-0 right-0 top-full mt-1 z-30 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+        >
+          {suggestions.map((d, i) => (
+            <li
+              key={d}
+              role="option"
+              aria-selected={i === highlight}
+              onMouseDown={(e) => {
+                // Use mousedown so the click registers before input blur.
+                e.preventDefault();
+                commit(d);
+              }}
+              onMouseEnter={() => setHighlight(i)}
+              className={
+                "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer " +
+                (i === highlight ? "bg-brand-50 text-brand-700" : "text-slate-700 hover:bg-slate-50")
+              }
+            >
+              <MapPin className="h-4 w-4 text-slate-400" />
+              {d}
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && suggestions.length === 0 && value.trim() !== "" && (
+        <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-xl border border-slate-200 bg-white shadow-lg px-3 py-2 text-xs text-slate-500">
+          No match — try one of: {KNOWN_DESTINATIONS.join(", ")}.
+        </div>
+      )}
+    </div>
   );
 }
 

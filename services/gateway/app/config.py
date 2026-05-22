@@ -10,8 +10,9 @@ def _normalize_url(v: str) -> str:
     """Accept either bare hostname or full URL; produce a full URL.
 
     Render's `fromService.property: host` returns the bare service name in
-    practice, which httpx cannot reach. Auto-prefixing with https:// turns
-    operator/Blueprint mistakes into a no-op instead of a 502 storm.
+    practice, which httpx cannot reach. We aggressively rewrite typos:
+      - prepend https:// (or http:// for localhost / 127.*)
+      - if the host has no dot (e.g. 'hbs-search-service'), assume .onrender.com
     """
     v = (v or "").strip().rstrip("/")
     if not v:
@@ -19,7 +20,18 @@ def _normalize_url(v: str) -> str:
     if "://" not in v:
         scheme = "http" if v.startswith(("localhost", "127.")) else "https"
         v = f"{scheme}://{v}"
-    return v
+    scheme, _, rest = v.partition("://")
+    host_and_path = rest.split("/", 1)
+    host = host_and_path[0]
+    tail = "/" + host_and_path[1] if len(host_and_path) == 2 else ""
+    bare_host = host.split(":", 1)[0]
+    if (
+        "." not in bare_host
+        and bare_host not in ("localhost",)
+        and not bare_host.replace(".", "").isdigit()
+    ):
+        host = f"{bare_host}.onrender.com" + (host[len(bare_host) :] if ":" in host else "")
+    return f"{scheme}://{host}{tail}".rstrip("/")
 
 
 class GatewaySettings(BaseServiceSettings):

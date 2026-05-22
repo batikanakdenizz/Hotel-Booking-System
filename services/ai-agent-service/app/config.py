@@ -30,23 +30,38 @@ class AgentSettings(BaseServiceSettings):
     @field_validator("gateway_url")
     @classmethod
     def _normalize_gateway_url(cls, v: str) -> str:
-        """Accept either a bare hostname ('hbs-gateway') or a full URL.
+        """Accept any reasonable spelling of the gateway URL.
 
-        Render's `fromService.property: host` returned bare service names in
-        practice, so an operator who copy-pastes that value into the dashboard
-        would otherwise crash every tool call with an httpx ProtocolError.
-        Defensively prepend https:// when the scheme is missing and strip any
-        trailing slash so f-strings build clean URLs.
+        Render's `fromService.property: host` returned bare service names
+        ('hbs-gateway') instead of FQDNs, so an operator who copy-pasted that
+        value into the dashboard would otherwise crash every tool call with an
+        httpx ProtocolError. Be aggressive about turning typos into a working
+        URL:
+          - strip whitespace + trailing slash
+          - prepend https:// (or http:// for localhost / 127.*)
+          - if the host has no dot (e.g. 'hbs-gateway'), assume .onrender.com
         """
         v = v.strip().rstrip("/")
         if not v:
             raise ValueError("gateway_url must not be empty")
         if "://" not in v:
-            # Assume HTTPS for anything that looks like a hostname; only an
-            # explicit localhost / 127.0.0.1 falls back to http.
             scheme = "http" if v.startswith(("localhost", "127.")) else "https"
             v = f"{scheme}://{v}"
-        return v
+        # Now v has a scheme. Inspect the host portion.
+        scheme, _, rest = v.partition("://")
+        host_and_path = rest.split("/", 1)
+        host = host_and_path[0]
+        # Tail = trailing /path if any, e.g. '' or 'foo/bar'.
+        tail = "/" + host_and_path[1] if len(host_and_path) == 2 else ""
+        # Strip ':port' for the dot check.
+        bare_host = host.split(":", 1)[0]
+        if (
+            "." not in bare_host
+            and bare_host not in ("localhost",)
+            and not bare_host.replace(".", "").isdigit()  # not an IP
+        ):
+            host = f"{bare_host}.onrender.com" + (host[len(bare_host) :] if ":" in host else "")
+        return f"{scheme}://{host}{tail}".rstrip("/")
 
 
 settings = AgentSettings()

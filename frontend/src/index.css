@@ -1,9 +1,9 @@
+/* @imports MUST come before Tailwind directives per CSS spec. */
+@import url("https://rsms.me/inter/inter.css");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://rsms.me/inter/inter.css");
-@import "leaflet/dist/leaflet.css";
 
 html, body, #root { height: 100%; }
 body { @apply bg-slate-50 text-slate-900 antialiased font-sans; }

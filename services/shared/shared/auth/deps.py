@@ -12,16 +12,21 @@ implies the cheaper ones, so FastAPI evaluates the graph once per request.
 """
 from __future__ import annotations
 
-from typing import Annotated, NewType, TypedDict
+from typing import TYPE_CHECKING, Annotated, NewType, TypedDict
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth as fb_auth
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.auth.firebase import verify_firebase_token
-from shared.models import User
+
+# SQLAlchemy + ORM are imported lazily inside the DB-backed helpers so that
+# services that only need pure-Firebase identity (e.g. comments-service, which
+# only uses Mongo) can install shared without the [postgres] extra.
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from shared.models import User
 
 
 class FirebaseClaims(TypedDict, total=False):
@@ -97,6 +102,10 @@ async def _get_or_create_user_impl(
     Pure function — takes a session and claims, returns the row. Service-level
     wrapper (`get_or_create_user`) plugs in the session dependency.
     """
+    from sqlalchemy import select
+
+    from shared.models import User
+
     uid = claims["uid"]
     email = claims.get("email") or f"{uid}@no-email.firebase"
     display_name = claims.get("name")
@@ -133,9 +142,10 @@ def build_get_or_create_user(session_dep):  # noqa: ANN001 — generic FastAPI d
 
     Example in admin-service:
 
-        from shared.auth import build_get_or_create_user
+        from shared.auth.deps import build_get_or_create_user
         get_or_create_user = build_get_or_create_user(get_session)
     """
+    from sqlalchemy.ext.asyncio import AsyncSession  # noqa: F401 — needed for runtime Depends
 
     async def get_or_create_user(
         claims: Annotated[FirebaseClaims, Depends(get_current_user)],

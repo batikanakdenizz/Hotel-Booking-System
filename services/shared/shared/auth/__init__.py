@@ -1,28 +1,12 @@
-"""Firebase JWT verification + FastAPI dependency helpers.
+"""Auth helpers split into two submodules.
 
-Identity comes from Firebase; authorization (admin role) comes from Postgres
-via `users.role`. See Plan §3.2.
+- ``shared.auth.firebase`` -- pure Firebase JWT verify + admin SDK init.
+  No DB dependency; safe to import from services that only need to
+  validate tokens (e.g. the gateway).
+- ``shared.auth.deps`` -- FastAPI dependencies that read the Postgres
+  ``users`` table (role check, get-or-create). Pulls in SQLAlchemy.
+
+We intentionally do NOT re-export from ``deps`` at the package level so
+that ``from shared.auth.firebase import X`` does not transitively force
+SQLAlchemy into pure-proxy services like the gateway.
 """
-from shared.auth.firebase import (
-    init_firebase_app,
-    init_firebase_from_env,
-    verify_firebase_token,
-)
-from shared.auth.deps import (
-    FirebaseClaims,
-    build_get_or_create_user,
-    build_require_admin,
-    get_current_user,
-    optional_current_user,
-)
-
-__all__ = [
-    "init_firebase_app",
-    "init_firebase_from_env",
-    "verify_firebase_token",
-    "FirebaseClaims",
-    "get_current_user",
-    "optional_current_user",
-    "build_get_or_create_user",
-    "build_require_admin",
-]

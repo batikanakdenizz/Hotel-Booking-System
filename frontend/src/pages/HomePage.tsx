@@ -2,11 +2,16 @@ import { Link } from "react-router-dom";
 import { ShieldCheck, Sparkles, MessageCircle, Building2 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 
+// Mirrors the cities seeded in scripts/seed_demo_data.py so every card returns
+// at least one hotel when clicked.
 const FEATURED_DESTINATIONS = [
   { name: "Rome", image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=70" },
   { name: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=70" },
   { name: "Istanbul", image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=70" },
-  { name: "Berlin", image: "https://images.unsplash.com/photo-1587330979470-3016b6702d89?auto=format&fit=crop&w=800&q=70" },
+  { name: "Barcelona", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=70" },
+  { name: "New York", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=70" },
+  { name: "Tokyo", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=70" },
+  { name: "Bodrum", image: "https://images.unsplash.com/photo-1602391833977-358a52198938?auto=format&fit=crop&w=800&q=70" },
 ];
 
 export default function HomePage() {
@@ -49,7 +54,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-2xl font-bold text-slate-900">Popular destinations</h2>
         <p className="mt-1 text-slate-500">Hand-picked cities worth exploring this season.</p>
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {FEATURED_DESTINATIONS.map((d) => (
             <Link
               key={d.name}

@@ -8,10 +8,47 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from app import agent, session
+from app.config import settings
+from app.tools import search as search_tool
 
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"])
+
+
+@router.get("/debug/config")
+async def debug_config() -> dict:
+    """Read-only echo of effective config -- handy for diagnosing URL/env bugs."""
+    return {
+        "gateway_url": settings.gateway_url,
+        "groq_model": settings.groq_model,
+        "groq_api_base": settings.groq_api_base,
+        "max_tool_iterations": settings.max_tool_iterations,
+        "tool_http_timeout_s": settings.tool_http_timeout_s,
+    }
+
+
+@router.get("/debug/search")
+async def debug_search(request: Request, destination: str = "Rome") -> dict:
+    """Bypass the LLM and call the search tool directly.
+
+    Returns the raw tool result so a 'tool_exception' surfaces its real
+    detail instead of being paraphrased by the LLM. Hit:
+
+        GET /api/v1/agent/debug/search?destination=Istanbul
+    """
+    client = request.app.state.http_client
+    try:
+        result = await search_tool.search_hotels(
+            client,
+            destination=destination,
+            check_in="2026-07-15",
+            check_out="2026-07-18",
+            guests=2,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"error": type(exc).__name__, "detail": str(exc), "gateway_url": settings.gateway_url}
+    return {"ok": True, "gateway_url": settings.gateway_url, "result": result}
 
 
 class ChatRequest(BaseModel):

@@ -1,5 +1,7 @@
-# Gateway requirements — Phase 0
-# Real routing/JWT/rate-limit deps come in Phase 8.
+# Gateway runtime deps -- httpx for proxying, slowapi for rate limiting,
+# firebase-admin (via shared[firebase]) for JWT verification.
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
--e ../shared
+httpx==0.27.2
+slowapi==0.1.9
+-e ../shared[firebase]

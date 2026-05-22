@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { SearchResultItem } from "@/types/hotel";
 
@@ -14,6 +14,36 @@ const DefaultIcon = L.icon({
   shadowSize: [41, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Forces Leaflet to recompute its tile grid after the container reaches its
+// final layout size. Without this the map renders a partial / fragmented grid
+// when mounted inside a sticky sidebar that grows after first paint.
+function FitToContainer({ hotels }: { hotels: SearchResultItem[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const recalc = () => map.invalidateSize();
+    const t1 = window.setTimeout(recalc, 0);
+    const t2 = window.setTimeout(recalc, 250);
+    const ro = new ResizeObserver(recalc);
+    ro.observe(map.getContainer());
+    window.addEventListener("resize", recalc);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      ro.disconnect();
+      window.removeEventListener("resize", recalc);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (hotels.length === 0) return;
+    const bounds = L.latLngBounds(hotels.map((h) => [h.latitude, h.longitude] as [number, number]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+  }, [hotels, map]);
+
+  return null;
+}
 
 export function HotelMap({ hotels }: { hotels: SearchResultItem[] }) {
   const center = useMemo<[number, number]>(() => {
@@ -34,6 +64,7 @@ export function HotelMap({ hotels }: { hotels: SearchResultItem[] }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <FitToContainer hotels={hotels} />
       {hotels.map((h) => (
         <Marker key={h.hotel_id} position={[h.latitude, h.longitude]}>
           <Popup>

@@ -1,7 +1,7 @@
 """ai-agent-service settings."""
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from shared.config import BaseServiceSettings
 
@@ -26,6 +26,27 @@ class AgentSettings(BaseServiceSettings):
 
     # Tools that send HTTP traffic via httpx — share timeouts with the gateway.
     tool_http_timeout_s: float = 30.0
+
+    @field_validator("gateway_url")
+    @classmethod
+    def _normalize_gateway_url(cls, v: str) -> str:
+        """Accept either a bare hostname ('hbs-gateway') or a full URL.
+
+        Render's `fromService.property: host` returned bare service names in
+        practice, so an operator who copy-pastes that value into the dashboard
+        would otherwise crash every tool call with an httpx ProtocolError.
+        Defensively prepend https:// when the scheme is missing and strip any
+        trailing slash so f-strings build clean URLs.
+        """
+        v = v.strip().rstrip("/")
+        if not v:
+            raise ValueError("gateway_url must not be empty")
+        if "://" not in v:
+            # Assume HTTPS for anything that looks like a hostname; only an
+            # explicit localhost / 127.0.0.1 falls back to http.
+            scheme = "http" if v.startswith(("localhost", "127.")) else "https"
+            v = f"{scheme}://{v}"
+        return v
 
 
 settings = AgentSettings()

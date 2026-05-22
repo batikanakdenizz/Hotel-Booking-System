@@ -1,17 +1,13 @@
 """Async client wrappers for the four external datastores.
 
-Each module exposes simple factory functions; FastAPI services own the
-connection lifecycle (open on startup, close on shutdown).
+Each datastore lives in its own submodule:
+
+- ``shared.clients.postgres`` (requires the [postgres] extra)
+- ``shared.clients.mongo``    (requires the [mongo] extra)
+- ``shared.clients.redis``    (requires the [redis] extra)
+- ``shared.clients.rabbitmq`` (requires the [rabbitmq] extra)
+
+We deliberately do NOT re-export from any submodule at the package level so
+that ``from shared.clients.mongo import X`` does not transitively force
+SQLAlchemy (or any other unrelated dependency) into the importing service.
 """
-from shared.clients.postgres import (
-    create_async_engine_for_service,
-    create_session_factory,
-    session_dep,
-)
-
-__all__ = [
-    "create_async_engine_for_service",
-    "create_session_factory",
-    "session_dep",
-]
-

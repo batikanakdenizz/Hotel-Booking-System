@@ -16,8 +16,12 @@ class NotificationSettings(BaseServiceSettings):
     rabbitmq_queue: str = "q.reservations.notifications"
     rabbitmq_routing_key: str = "reservation.created"
 
-    resend_api_key: str
-    email_from: str = "onboarding@resend.dev"
+    # Brevo (formerly Sendinblue) transactional email -- the v3 API key.
+    # Free tier: 300 emails/day. Verify the sender_email below in
+    # Brevo dashboard before first send (Brevo sends a verification mail).
+    brevo_api_key: str
+    email_from: str = Field(description="Verified Brevo sender address, e.g. you@gmail.com")
+    email_from_name: str = "Stayfinder"
 
     # X-Cron-Secret header value that Google Cloud Scheduler must send.
     cron_secret: str = Field(description="Shared secret protecting /trigger/nightly")

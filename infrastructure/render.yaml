@@ -207,10 +207,12 @@ services:
         value: reservations-exchange
       - key: RABBITMQ_QUEUE
         value: q.reservations.notifications
-      - key: RESEND_API_KEY
+      - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: onboarding@resend.dev
+        sync: false   # verified Brevo sender, e.g. you@gmail.com
+      - key: EMAIL_FROM_NAME
+        value: Stayfinder
       - key: CRON_SECRET
         sync: false
 

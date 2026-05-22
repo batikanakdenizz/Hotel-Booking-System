@@ -171,13 +171,13 @@ straight to the code.
 - A scheduled Google Cloud Scheduler job hits it every night at
   02:00 Europe/Istanbul. The worker scans next-30-day availability,
   flags hotels under the 20% threshold, and emails their admin via
-  Resend.
+  Brevo.
 - Code: `services/notification-service/app/workers/occupancy.py`.
 
 ### 7. RabbitMQ-driven booking notifications
 - The consumer (`services/notification-service/app/workers/consumer.py`)
   pulls every `reservation.created` event, sends a confirmation email
-  via Resend, and acks only after the email succeeds (manual ack —
+  via Brevo, and acks only after the email succeeds (manual ack —
   at-least-once semantics).
 
 ### 8. AI agent chat
@@ -220,7 +220,7 @@ straight to the code.
 | Queue | **CloudAMQP RabbitMQ** | Durable exchanges + persistent messages on the free "Little Lemur" plan |
 | Auth (IAM) | **Firebase Authentication** | Web SDK + Admin SDK; satisfies the "external IAM" guideline rule |
 | LLM | **Groq Llama 3.3 70B** | Sub-second latency, OpenAI-compatible API, generous free tier |
-| Email | **Resend** | Clean API, free test domain `onboarding@resend.dev` |
+| Email | **Brevo** | 300 emails/day free tier; verifies a single sender (no domain needed) so the demo delivers to any recipient |
 | Frontend framework | **React 19 + Vite + TypeScript** | Fastest dev loop, content-hash chunking, SPA-friendly |
 | UI styling | **Tailwind CSS 3.4** | Hand-rolled brand palette + Inter font |
 | Data fetching | **TanStack Query 5** | Smart cache, retries, query invalidation hooks |
@@ -264,7 +264,7 @@ flowchart LR
     subgraph External ["External SaaS"]
         FB[("Firebase Auth")]
         GROQ[("Groq Llama 3.3 70B")]
-        RESEND[("Resend email")]
+        RESEND[("Brevo email")]
         GCP[("Google Cloud Scheduler")]
     end
 
@@ -469,7 +469,7 @@ Hotel-Booking-System/
 │   ├── notification-service/
 │   └── ai-agent-service/
 └── scripts/
-    ├── verify_external_services.py   ← Postgres / Mongo / Redis / RabbitMQ / Firebase / Groq / Resend smoke checks
+    ├── verify_external_services.py   ← Postgres / Mongo / Redis / RabbitMQ / Firebase / Groq / Brevo smoke checks
     ├── seed_demo_data.py             ← seed Postgres with 10 hotels + 90-day availability
     ├── seed_demo_comments.py         ← seed Mongo with 4-6 reviews per hotel
     ├── promote_admin.py              ← UPDATE users SET role='hotel_admin'
@@ -570,7 +570,7 @@ High-level:
 |---|---|---|
 | Push code to GitHub | local | 1 min |
 | Render Blueprint → reads `infrastructure/render.yaml`, creates 7 services | Render dashboard | 5 min |
-| Set per-service secrets (Postgres / Mongo / Redis / RabbitMQ / Groq / Resend / Firebase) | Render env tab | 10 min |
+| Set per-service secrets (Postgres / Mongo / Redis / RabbitMQ / Groq / Brevo / Firebase) | Render env tab | 10 min |
 | Verify `/health` returns 200 | terminal | 1 min |
 | Vercel project import, root = `frontend/` | Vercel dashboard | 3 min |
 | Set `VITE_*` env vars (Firebase web SDK + gateway URL) | Vercel env tab | 5 min |
@@ -595,7 +595,7 @@ proves it on the live system.
 
 | Script | Proves |
 |---|---|
-| `verify_external_services.py` | Every external dep (Postgres / Mongo / Redis / RabbitMQ / Firebase / Groq / Resend) is reachable with the configured credentials. |
+| `verify_external_services.py` | Every external dep (Postgres / Mongo / Redis / RabbitMQ / Firebase / Groq / Brevo) is reachable with the configured credentials. |
 | `smoke_test_gateway.py` | Unauthenticated golden path (health, search, hotel detail, comments, distribution, agent chat) all return 200 with valid bodies. |
 | `verify_discount.py` | Mints a Firebase ID token, calls `/api/v1/search` anonymously and with the token, and asserts every room costs **exactly** 0.85× the anonymous price. |
 | `inspect_cache.py` | Walks Upstash Redis, lists every `hotel:*` and `destination:*` key with TTL + payload preview, then triggers a search and re-walks to prove the new key appears. |
@@ -680,9 +680,11 @@ Explicitly documented so a reviewer can challenge them:
 - **AI agent state is in-memory.** Restarting `ai-agent-service` loses
   per-session chat history. Acceptable for a demo; would swap for
   Redis sessions in production.
-- **Email is sent from Resend's test domain** (`onboarding@resend.dev`)
-  to keep the free tier; production would require domain
-  verification.
+- **Email is sent from a Brevo-verified single sender** (a personal
+  Gmail/Hotmail) so we can deliver to any recipient on the 300/day
+  free tier without owning a domain. Production with higher volume
+  would benefit from a verified custom domain (better deliverability,
+  professional From: address).
 - **Render free-tier services sleep after 15 min** of idle. The
   warmup GitHub Action runs only until 2026-05-29 so the project
   doesn't burn free-tier instance hours indefinitely.
@@ -731,7 +733,7 @@ A 5-minute walkthrough covering:
 - **Cloudflare / Render** for the free hosting tier that makes
   student projects like this deployable.
 - **Supabase, MongoDB Atlas, Upstash, CloudAMQP, Firebase, Groq,
-  Resend** for the no-credit-card free tiers.
+  Brevo** for the no-credit-card free tiers.
 - **CartoDB Voyager** for production-grade map tiles after the OSM
   tile server started throttling us.
 - The teaching staff of **SE 4458 (Yaşar University)** for the

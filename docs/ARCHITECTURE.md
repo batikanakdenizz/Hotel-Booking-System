@@ -39,7 +39,7 @@ Companion document to the README. Focused on **how** the system is shaped and
                                  ┌─────────────────────────┐
                                  │ notification (8005)     │
                                  │ · RabbitMQ consumer      │
-                                 │ · Resend email           │
+                                 │ · Brevo email           │
                                  │ · POST /trigger/nightly  │
                                  │   (Cloud Scheduler)      │
                                  └─────────────────────────┘
@@ -281,7 +281,7 @@ averages plus a `$bucket` histogram in a single Mongo round-trip per hotel.
 | MongoDB | MongoDB Atlas (M0 free) | Shared cluster |
 | Redis | Upstash | Pay-per-request free tier |
 | RabbitMQ | CloudAMQP | "Little Lemur" free plan |
-| Email | Resend | Test domain `onboarding@resend.dev` |
+| Email | Brevo (transactional) | Verified single-sender Gmail/Hotmail, 300/day free |
 | Auth | Firebase | Web SDK + Admin SDK |
 | Scheduler | Google Cloud Scheduler | Nightly `POST /trigger/nightly` |
 | Warmup | GitHub Actions | 10-min ping matrix, auto-disables 2026-05-29 |

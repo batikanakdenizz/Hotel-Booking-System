@@ -12,7 +12,7 @@ Estimated time: **30-45 min** end-to-end.
 
 - GitHub repository with the latest `main` branch pushed
 - All external services from `.env.example` already provisioned (Supabase,
-  Mongo Atlas, Upstash, CloudAMQP, Firebase, Groq, Resend)
+  Mongo Atlas, Upstash, CloudAMQP, Firebase, Groq, Brevo)
 - A working local stack (gateway returns `200` on `/health`)
 
 > Tip: keep your local `.env` open in another tab -- you will be copy-pasting
@@ -51,7 +51,7 @@ The `sync: false` keys in `render.yaml` are the ones you must set manually.
 | `hbs-search-service` | `POSTGRES_URL`, `REDIS_URL` |
 | `hbs-booking-service` | `POSTGRES_URL`, `RABBITMQ_URL` |
 | `hbs-comments-service` | `MONGO_URL` |
-| `hbs-notification-service` | `POSTGRES_URL`, `RABBITMQ_URL`, `RESEND_API_KEY`, `CRON_SECRET` |
+| `hbs-notification-service` | `POSTGRES_URL`, `RABBITMQ_URL`, `BREVO_API_KEY`, `EMAIL_FROM` (verified Brevo sender), `CRON_SECRET` |
 | `hbs-ai-agent-service` | `GROQ_API_KEY` |
 
 > **Important** for `FIREBASE_SERVICE_ACCOUNT_JSON`: paste the FULL JSON content

@@ -301,7 +301,7 @@ python scripts/promote_admin.py akdenizbatikan@hotmail.com
 - Postgres'te `bookings` row'u oluşur
 - `room_availability` o dates için decrement olur
 - RabbitMQ'ya `reservation.created` event publish edilir
-- Notification-service consumer tetiklenir, Resend ile mail atar
+- Notification-service consumer tetiklenir, Brevo ile mail atar
 
 ---
 
@@ -314,7 +314,7 @@ python scripts/promote_admin.py akdenizbatikan@hotmail.com
 - ✅ 1-2 dk içinde "Reservation Confirmed — Bosphorus Bay Hotel" mail'i gelir
 - ✅ Mail içeriğinde otel adı, tarihler, fiyat var
 
-**Not:** Eğer `example.com` gibi sahte email kullandıysan mail gelmez (Resend test domain `onboarding@resend.dev`'den sadece doğrulanmış adreslere gönderir). Test için kendi gerçek email'ini kullan.
+**Not:** Mail kutuna gerçek bir adres ver — Brevo herkese gönderiyor ama spam klasörüne düşebilir; ilk testte spam'i de kontrol et.
 
 ---
 

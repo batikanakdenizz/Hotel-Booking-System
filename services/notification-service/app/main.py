@@ -30,7 +30,11 @@ async def lifespan(app: FastAPI):
     app.state.session_factory = create_session_factory(engine)
 
     app.state.rabbitmq = await create_rabbitmq_connection(settings.rabbitmq_url)
-    app.state.email_client = EmailClient(settings.resend_api_key, settings.email_from)
+    app.state.email_client = EmailClient(
+        api_key=settings.brevo_api_key,
+        sender_email=settings.email_from,
+        sender_name=settings.email_from_name,
+    )
 
     # Start the consumer as a background task. Cancel cleanly on shutdown.
     stop_event = asyncio.Event()

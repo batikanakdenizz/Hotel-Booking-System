@@ -15,7 +15,7 @@ A production-grade, microservice-based hotel booking platform.
 [**🌐 Live App**](https://hotel-booking-system-psi-beryl.vercel.app) ·
 [**⚙️ API Gateway**](https://hbs-gateway.onrender.com/health) ·
 [**📦 Source**](https://github.com/batikanakdenizz/Hotel-Booking-System) ·
-[**📺 Demo Video**](#-demo-video)
+[**📺 Demo Video**](https://youtu.be/OdYu_x2EO3o)
 
 </div>
 
@@ -31,24 +31,39 @@ A production-grade, microservice-based hotel booking platform.
 
 ---
 
+## 🌐 Live demo
+
+| Layer | URL |
+|---|---|
+| Frontend (Vercel) | https://hotel-booking-system-psi-beryl.vercel.app |
+| API Gateway (Render) | https://hbs-gateway.onrender.com |
+| Source code | https://github.com/batikanakdenizz/Hotel-Booking-System |
+| Demo video (≤ 5 min) | https://youtu.be/OdYu_x2EO3o |
+
+**Try it:** open the live app, search for **Istanbul** with future
+dates, click any hotel, and try the floating AI chat in the bottom-right
+corner — ask it "find me a hotel in Rome on Jul 15 to Jul 18 for 2
+guests".
+
+---
+
 ## 📑 Table of contents
 
 1. [About the project](#-about-the-project)
-2. [Live demo](#-live-demo)
-3. [Key features](#-key-features)
-4. [Tech stack](#%EF%B8%8F-tech-stack)
-5. [Architecture](#%EF%B8%8F-architecture)
-6. [Data models](#-data-models)
-7. [API surface](#-api-surface)
-8. [Project structure](#-project-structure)
-9. [Local development](#-local-development)
-10. [Production deployment](#-production-deployment)
-11. [Verification & testing scripts](#-verification--testing-scripts)
-12. [Design decisions](#-design-decisions)
-13. [Assumptions](#-assumptions)
-14. [Issues encountered](#-issues-encountered)
-15. [Demo video](#-demo-video)
-16. [License](#-license)
+2. [Key features](#-key-features)
+3. [Tech stack](#%EF%B8%8F-tech-stack)
+4. [Architecture](#%EF%B8%8F-architecture)
+5. [Data models](#-data-models)
+6. [API surface](#-api-surface)
+7. [Project structure](#-project-structure)
+8. [Local development](#-local-development)
+9. [Production deployment](#-production-deployment)
+10. [Verification & testing scripts](#-verification--testing-scripts)
+11. [Design decisions](#-design-decisions)
+12. [Assumptions](#-assumptions)
+13. [Issues encountered](#-issues-encountered)
+14. [Demo video](#-demo-video)
+15. [License](#-license)
 
 ---
 
@@ -79,24 +94,6 @@ This implementation goes further than the brief in three places:
 
 ---
 
-## 🌐 Live demo
-
-| Layer | URL |
-|---|---|
-| Frontend (Vercel) | https://hotel-booking-system-psi-beryl.vercel.app |
-| API Gateway (Render) | https://hbs-gateway.onrender.com |
-| Source code | https://github.com/batikanakdenizz/Hotel-Booking-System |
-| Demo video (≤ 5 min) | _link to be added after recording_ |
-
-**Try it:** open the live app, search for **Istanbul** with future
-dates, click any hotel, and try the floating AI chat in the bottom-right
-corner — ask it "find me a hotel in Rome on Jul 15 to Jul 18 for 2
-guests".
-
-
-
----
-
 ## ✨ Key features
 
 Every feature listed below corresponds to a requirement in the final
@@ -117,11 +114,16 @@ straight to the code.
 ### 2. Hotel search — destination + dates + guests, with map
 - Searches only rooms whose `room_availability.available_count > 0`
   for every date in `[check_in, check_out)`.
+- Destination input has an **autocomplete dropdown** with the seeded
+  cities; accent / case / Turkish dotted-İ insensitive so
+  *İstanbul* / *istanbul* / *İSTANBUL* all canonicalize to the same
+  search.
 - "Haritada göster" via **react-leaflet + CartoDB Voyager tiles**.
 - Hotel-detail payloads are served from Upstash Redis (`hotel:{id}`,
   24 h TTL); availability is **never cached** so we never sell a sold
   room.
-- Code: `services/search-service/app/routers/search.py`.
+- Code: `services/search-service/app/routers/search.py`,
+  `frontend/src/components/SearchBar.tsx`.
 
 <p align="center">
   <img src="docs/screenshots/Location_Hotel_List.png" alt="Hotel search results with map" width="900" />
@@ -704,27 +706,31 @@ The full audit log (every bug + its commit) lives in
 | "undefined stays" in search results UI | Stale Vercel CDN cache + Render cold-start 502 cascade | Hard refresh + warmup matrix + `Accept-Encoding` fix |
 | Fragmented map tiles | Leaflet CSS dropped because `@import` came after `@tailwind` directives | `import 'leaflet/dist/leaflet.css'` in `main.tsx` instead |
 | Render Blueprint `fromService.host` returned bare service names | Render's free tier resolves this differently than docs imply | Hardcoded `*.onrender.com` URLs in `render.yaml` + Pydantic `field_validator` that auto-suffixes `.onrender.com` |
+| Booking-confirmation emails silently rejected for non-account-owner recipients | Resend's free sandbox sender (`onboarding@resend.dev`) only delivers to the account's verified email | Migrated `EmailClient` to Brevo's transactional API; verifies a single sender email (no custom domain needed) and delivers to any recipient on the 300/day free tier |
+| `Istanbul` / `İstanbul` / `istanbul` returned different results | Free text input let the user submit a non-canonical destination | Autocomplete dropdown in `SearchBar` with NFD-normalised, dotted-I tolerant fuzzy match; canonical city name always submitted |
 
 Each of these is fixed in the production deployment as of commit
-[`8c50446`](https://github.com/batikanakdenizz/Hotel-Booking-System/commit/8c50446).
+[`3824e87`](https://github.com/batikanakdenizz/Hotel-Booking-System/commit/3824e87).
 
 ---
 
 ## 📺 Demo video
 
-<!-- TODO: paste the unlisted YouTube / Loom embed once recorded. -->
+**▶️ Watch:** https://youtu.be/OdYu_x2EO3o (≤ 5 minutes)
 
-A 5-minute walkthrough covering:
+The walkthrough covers:
 
 1. Live URL + architecture overview (30 s)
 2. Search → results + map → hotel detail (60 s)
-3. Sign-up → booking → My Bookings → email confirmation (60 s)
+3. Sign-up → booking → My Bookings → email confirmation via Brevo (60 s)
 4. Comments + 5-dimension Recharts distribution (60 s)
-5. AI chat: natural-language search + book (60 s)
+5. AI chat: natural-language search + book against the Groq Llama 3.3
+   tool-calling loop (60 s)
 6. Admin panel + brief peek at Render + Cloud Scheduler (30 s)
 
-> Recording instructions and a shot-by-shot script live in
-> [`TestScenerio.md`](TestScenerio.md).
+> The shot-by-shot recording script + a 29-test pre-recording rehearsal
+> live in [`TestScenerio.md`](TestScenerio.md) and
+> [`demovideooutline.md`](demovideooutline.md).
 
 ---
 

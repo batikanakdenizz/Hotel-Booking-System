@@ -49,36 +49,21 @@ services:
         sync: false   # set to your Vercel URL after frontend deploy
       - key: RATE_LIMIT_PER_MINUTE
         value: "60"
+      # Inter-service URLs: free-tier Render web services don't have private
+      # networking, so we hardcode the public HTTPS URLs. If you rename a
+      # service in the Blueprint above, update the matching URL here too.
       - key: ADMIN_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-admin-service
-          property: host
+        value: https://hbs-admin-service.onrender.com
       - key: SEARCH_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-search-service
-          property: host
+        value: https://hbs-search-service.onrender.com
       - key: BOOKING_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-booking-service
-          property: host
+        value: https://hbs-booking-service.onrender.com
       - key: COMMENTS_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-comments-service
-          property: host
+        value: https://hbs-comments-service.onrender.com
       - key: NOTIFICATION_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-notification-service
-          property: host
+        value: https://hbs-notification-service.onrender.com
       - key: AGENT_SERVICE_URL
-        fromService:
-          type: web
-          name: hbs-ai-agent-service
-          property: host
+        value: https://hbs-ai-agent-service.onrender.com
 
   # ----------------------------------------------------------
   # admin-service
@@ -250,7 +235,4 @@ services:
       - key: GROQ_MODEL
         value: llama-3.3-70b-versatile
       - key: GATEWAY_URL
-        fromService:
-          type: web
-          name: hbs-gateway
-          property: host
+        value: https://hbs-gateway.onrender.com

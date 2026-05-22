@@ -1,0 +1,25 @@
+# Pings the Render gateway every 10 min to keep the free-tier service warm.
+# Enable this only during the demo window -- otherwise it consumes Render's
+# free instance-hours unnecessarily.
+#
+# To use a different gateway URL, edit the curl line below or override
+# secrets.GATEWAY_HEALTH_URL in GitHub repo settings.
+name: render-warmup
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes (GH delays it 5-15 min in practice)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping gateway /health
+        env:
+          URL: ${{ secrets.GATEWAY_HEALTH_URL || 'https://hbs-gateway.onrender.com/health' }}
+        run: |
+          set -e
+          echo "Pinging $URL"
+          curl -fsS --max-time 60 "$URL"

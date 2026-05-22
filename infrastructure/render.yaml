@@ -1,0 +1,242 @@
+# ============================================================
+# Hotel Booking System -- Render.com Blueprint
+# ============================================================
+# Deploy all 7 backend services with one click via Render's Blueprints UI:
+#   https://dashboard.render.com/blueprints
+#
+# WHAT THIS DOES
+#   - Creates 7 web services from the Dockerfiles in services/*
+#   - Free plan -- services sleep after 15 min idle (warmup pings in Phase 13)
+#   - Inter-service URLs are auto-wired with `fromService` references
+#   - Sensitive values (database URLs, API keys) are marked `sync: false`
+#     so Render does NOT pull them from the file -- you set them once in the
+#     Blueprint UI after the first sync.
+#
+# ONE-TIME MANUAL STEPS (after Render auto-creates the services)
+#   1. Open each service in the Render dashboard
+#   2. Environment -> Add the secrets marked `sync: false` below
+#      (POSTGRES_URL, REDIS_URL, MONGO_URL, RABBITMQ_URL, GROQ_API_KEY,
+#       RESEND_API_KEY, FIREBASE_SERVICE_ACCOUNT_JSON, CRON_SECRET)
+#   3. Manual Deploy -> Deploy latest commit
+#
+# After deploy, the gateway URL appears in the dashboard. Plug it into:
+#   frontend/.env.production -> VITE_API_BASE_URL
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Gateway -- the only service that the frontend hits.
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-gateway
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/gateway/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: gateway
+      - key: LOG_LEVEL
+        value: INFO
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false   # set to your Vercel URL after frontend deploy
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "60"
+      - key: ADMIN_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-admin-service
+          property: host
+      - key: SEARCH_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-search-service
+          property: host
+      - key: BOOKING_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-booking-service
+          property: host
+      - key: COMMENTS_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-comments-service
+          property: host
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-notification-service
+          property: host
+      - key: AGENT_SERVICE_URL
+        fromService:
+          type: web
+          name: hbs-ai-agent-service
+          property: host
+
+  # ----------------------------------------------------------
+  # admin-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-admin-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/admin-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: admin-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: POSTGRES_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: HOTEL_DETAIL_TTL_SECONDS
+        value: "86400"
+      - key: DESTINATION_INDEX_TTL_SECONDS
+        value: "21600"
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+
+  # ----------------------------------------------------------
+  # search-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-search-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/search-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: search-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: POSTGRES_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: HOTEL_DETAIL_TTL_SECONDS
+        value: "86400"
+      - key: DESTINATION_INDEX_TTL_SECONDS
+        value: "21600"
+
+  # ----------------------------------------------------------
+  # booking-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-booking-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/booking-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: booking-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: POSTGRES_URL
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: RABBITMQ_EXCHANGE
+        value: reservations-exchange
+      - key: RABBITMQ_ROUTING_KEY
+        value: reservation.created
+      - key: RABBITMQ_QUEUE
+        value: q.reservations.notifications
+      - key: RABBITMQ_PUBLISH_MAX_RETRIES
+        value: "3"
+      - key: RABBITMQ_PUBLISH_TIMEOUT_S
+        value: "10"
+
+  # ----------------------------------------------------------
+  # comments-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-comments-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/comments-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: comments-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_DB_NAME
+        value: hotel_booking_comments
+
+  # ----------------------------------------------------------
+  # notification-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-notification-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/notification-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: notification-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: POSTGRES_URL
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: RABBITMQ_EXCHANGE
+        value: reservations-exchange
+      - key: RABBITMQ_QUEUE
+        value: q.reservations.notifications
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: onboarding@resend.dev
+      - key: CRON_SECRET
+        sync: false
+
+  # ----------------------------------------------------------
+  # ai-agent-service
+  # ----------------------------------------------------------
+  - type: web
+    name: hbs-ai-agent-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/ai-agent-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SERVICE_NAME
+        value: ai-agent-service
+      - key: LOG_LEVEL
+        value: INFO
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GATEWAY_URL
+        fromService:
+          type: web
+          name: hbs-gateway
+          property: host

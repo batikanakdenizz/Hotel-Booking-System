@@ -106,6 +106,8 @@ services:
         value: "21600"
       - key: FIREBASE_PROJECT_ID
         sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
 
   # ----------------------------------------------------------
   # search-service
@@ -131,6 +133,10 @@ services:
         value: "86400"
       - key: DESTINATION_INDEX_TTL_SECONDS
         value: "21600"
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
 
   # ----------------------------------------------------------
   # booking-service
@@ -162,6 +168,10 @@ services:
         value: "3"
       - key: RABBITMQ_PUBLISH_TIMEOUT_S
         value: "10"
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
 
   # ----------------------------------------------------------
   # comments-service
@@ -183,6 +193,10 @@ services:
         sync: false
       - key: MONGO_DB_NAME
         value: hotel_booking_comments
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
 
   # ----------------------------------------------------------
   # notification-service

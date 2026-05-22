@@ -6,7 +6,10 @@
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
 *.env
+!*.env.example
 firebase-service-account.json
 *-service-account.json
 *.pem

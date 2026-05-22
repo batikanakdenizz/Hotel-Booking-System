@@ -25,9 +25,8 @@ A production-grade, microservice-based hotel booking platform.
 > first click during the grading window is instant. After that date the
 > first request takes ~30 s to wake the containers.
 
-![alt text](image-1.png)
 <p align="center">
-  <img src="docs/screenshots/01-home.png" alt="Home page" width="900" />
+  <img src="docs/screenshots/Home.png" alt="Home page" width="900" />
 </p>
 
 ---
@@ -111,7 +110,9 @@ straight to the code.
 - Cache invalidation on every write so search readers see fresh data.
 - Code: `services/admin-service/app/routers/`.
 
-![alt text](image-3.png)
+<p align="center">
+  <img src="docs/screenshots/Admin_HotelList.png" alt="Hotel admin page" width="900" />
+</p>
 
 ### 2. Hotel search — destination + dates + guests, with map
 - Searches only rooms whose `room_availability.available_count > 0`
@@ -122,7 +123,9 @@ straight to the code.
   room.
 - Code: `services/search-service/app/routers/search.py`.
 
-![alt text](image-4.png)
+<p align="center">
+  <img src="docs/screenshots/Location_Hotel_List.png" alt="Hotel search results with map" width="900" />
+</p>
 
 ### 3. Member-only 15% discount
 - Search-service applies a runtime 0.85× multiplier when the request
@@ -146,7 +149,9 @@ straight to the code.
   `tenacity`.
 - Code: `services/booking-service/app/services/booking.py`.
 
-![alt text](image-5.png)
+<p align="center">
+  <img src="docs/screenshots/Mybookings.png" alt="My bookings page" width="900" />
+</p>
 
 ### 5. Reviews + per-dimension rating distribution
 - 5-dimensional ratings on a 1–10 scale per the PDF mockup:
@@ -156,7 +161,9 @@ straight to the code.
   Recharts horizontal bar chart on the detail page.
 - Code: `services/comments-service/app/repositories/comment.py`.
 
-![alt text](image-6.png)
+<p align="center">
+  <img src="docs/screenshots/Hotel_Detail_Ratings.png" alt="Hotel detail ratings and reviews" width="900" />
+</p>
 
 ### 6. Nightly low-occupancy alerts
 - `notification-service` exposes `POST /trigger/nightly`, guarded by
@@ -184,7 +191,9 @@ straight to the code.
   misbehaving LLM cannot hammer the API.
 - Code: `services/ai-agent-service/app/`.
 
-![alt text](image.png)
+<p align="center">
+  <img src="docs/screenshots/Ai_Chat.png" alt="AI agent chat widget" width="420" />
+</p>
 
 ### 9. Distributed cache (hotel details + destination index)
 - `hotel:{uuid}` strings hold every static hotel field plus its rooms,
@@ -569,9 +578,13 @@ High-level:
 | Add Vercel host to Firebase Authorized Domains | Firebase console | 2 min |
 | Create the Cloud Scheduler nightly job | GCP console | 5 min |
 
-![](image-1.png)
+<p align="center">
+  <img src="docs/screenshots/image-1.png" alt="Render deployment dashboard" width="900" />
+</p>
 
-![](image-2.png)
+<p align="center">
+  <img src="docs/screenshots/image-2.png" alt="Vercel deployment dashboard" width="900" />
+</p>
 
 ---
 

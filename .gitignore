@@ -84,3 +84,17 @@ docs/developing_process.md
 
 # --- Local secrets folder (service account JSONs, etc.) ---
 .secrets/
+
+.ignore/
+
+# --- Local debug artefacts from diagnostic curl/network captures ---
+getresp.txt
+preflight.txt
+hotels-hook.js
+search-page.js
+vercel-index.html
+vercel-main.js
+renderlogs.md
+*.bin
+/index.html
+/image.png

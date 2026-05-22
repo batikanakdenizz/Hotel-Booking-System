@@ -25,9 +25,7 @@ A production-grade, microservice-based hotel booking platform.
 > first click during the grading window is instant. After that date the
 > first request takes ~30 s to wake the containers.
 
-<!-- TODO: Hero screenshot of the home page. Capture the full landing page
-     (hero gradient, search bar, popular destinations grid). Recommended:
-     1600 × 900, lightly compressed PNG/WebP. Save as docs/screenshots/01-home.png. -->
+![alt text](image-1.png)
 <p align="center">
   <img src="docs/screenshots/01-home.png" alt="Home page" width="900" />
 </p>
@@ -96,9 +94,7 @@ dates, click any hotel, and try the floating AI chat in the bottom-right
 corner — ask it "find me a hotel in Rome on Jul 15 to Jul 18 for 2
 guests".
 
-<!-- TODO: optional small GIF or screenshot of the AI chat showing a real
-     prompt + LLM response with hotel cards. Save as
-     docs/screenshots/02-ai-chat.gif -->
+
 
 ---
 
@@ -115,8 +111,7 @@ straight to the code.
 - Cache invalidation on every write so search readers see fresh data.
 - Code: `services/admin-service/app/routers/`.
 
-<!-- TODO: screenshot of the /admin/hotels page showing the hotel list and the
-     "New hotel" form expanded. docs/screenshots/03-admin.png -->
+![alt text](image-3.png)
 
 ### 2. Hotel search — destination + dates + guests, with map
 - Searches only rooms whose `room_availability.available_count > 0`
@@ -127,8 +122,7 @@ straight to the code.
   room.
 - Code: `services/search-service/app/routers/search.py`.
 
-<!-- TODO: screenshot of the search results page with the map sidebar
-     showing markers for Istanbul. docs/screenshots/04-search.png -->
+![alt text](image-4.png)
 
 ### 3. Member-only 15% discount
 - Search-service applies a runtime 0.85× multiplier when the request
@@ -152,8 +146,7 @@ straight to the code.
   `tenacity`.
 - Code: `services/booking-service/app/services/booking.py`.
 
-<!-- TODO: screenshot of the My Bookings page after a booking confirmation.
-     docs/screenshots/05-my-bookings.png -->
+![alt text](image-5.png)
 
 ### 5. Reviews + per-dimension rating distribution
 - 5-dimensional ratings on a 1–10 scale per the PDF mockup:
@@ -163,8 +156,7 @@ straight to the code.
   Recharts horizontal bar chart on the detail page.
 - Code: `services/comments-service/app/repositories/comment.py`.
 
-<!-- TODO: screenshot of a hotel detail page showing the Recharts rating
-     chart + at least one user comment. docs/screenshots/06-comments-chart.png -->
+![alt text](image-6.png)
 
 ### 6. Nightly low-occupancy alerts
 - `notification-service` exposes `POST /trigger/nightly`, guarded by
@@ -192,8 +184,7 @@ straight to the code.
   misbehaving LLM cannot hammer the API.
 - Code: `services/ai-agent-service/app/`.
 
-<!-- TODO: screenshot of the floating AI chat widget with a prompt +
-     real hotel-list response visible. docs/screenshots/07-ai-chat.png -->
+![alt text](image.png)
 
 ### 9. Distributed cache (hotel details + destination index)
 - `hotel:{uuid}` strings hold every static hotel field plus its rooms,
@@ -578,11 +569,9 @@ High-level:
 | Add Vercel host to Firebase Authorized Domains | Firebase console | 2 min |
 | Create the Cloud Scheduler nightly job | GCP console | 5 min |
 
-<!-- TODO: screenshot of the Render dashboard showing the 7 services all Live.
-     docs/screenshots/09-render.png -->
+![](image-1.png)
 
-<!-- TODO: screenshot of the Vercel project deployments tab.
-     docs/screenshots/10-vercel.png -->
+![](image-2.png)
 
 ---
 

@@ -51,6 +51,11 @@ async def forward(
     }
     if x_user_id is not None:
         headers["X-User-Id"] = x_user_id
+    # Force identity encoding for the upstream hop so Cloudflare-in-front-of-Render
+    # does not return a brotli body that httpx (without the optional brotli
+    # package installed) would fail to decode -- the gateway then forwards raw
+    # compressed bytes to the client.
+    headers["accept-encoding"] = "identity"
 
     body = await request.body()
 

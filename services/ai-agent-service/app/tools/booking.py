@@ -37,7 +37,8 @@ async def book_hotel(
         "check_out": check_out,
         "guests": guests,
     }
-    headers = {"Authorization": f"Bearer {token}"}
+    # Accept-Encoding: identity -- see comment in tools/search.py.
+    headers = {"Authorization": f"Bearer {token}", "Accept-Encoding": "identity"}
     try:
         r = await client.post(url, json=body, headers=headers, timeout=settings.tool_http_timeout_s)
     except httpx.HTTPError as exc:

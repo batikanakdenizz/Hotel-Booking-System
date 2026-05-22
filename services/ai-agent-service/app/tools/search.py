@@ -23,7 +23,13 @@ async def search_hotels(
     Forwards the user's bearer token if present so the search-service applies
     the 15% discount and the LLM can quote real-pay prices.
     """
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    # Accept-Encoding: identity forces Cloudflare (in front of Render) to skip
+    # br/gzip compression on the wire. Without this, httpx may receive brotli
+    # bytes it cannot decode (`brotli` isn't a runtime dep here) and r.json()
+    # crashes with a UTF-8 decode error.
+    headers = {"Accept-Encoding": "identity"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     url = f"{settings.gateway_url}/api/v1/search"
     params = {
         "destination": destination,

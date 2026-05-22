@@ -9,16 +9,20 @@ from app.config import settings
 async def get_hotel_comments(client: httpx.AsyncClient, *, hotel_id: str) -> dict:
     """Returns a small payload: the top 5 recent comments + the 5-dim distribution."""
     base = settings.gateway_url
+    # Accept-Encoding: identity -- see tools/search.py for the rationale.
+    headers = {"Accept-Encoding": "identity"}
 
     try:
         list_resp = await client.get(
             f"{base}/api/v1/comments/hotels/{hotel_id}",
             params={"limit": 5},
+            headers=headers,
             timeout=settings.tool_http_timeout_s,
         )
         list_resp.raise_for_status()
         dist_resp = await client.get(
             f"{base}/api/v1/comments/hotels/{hotel_id}/distribution",
+            headers=headers,
             timeout=settings.tool_http_timeout_s,
         )
         dist_resp.raise_for_status()

@@ -1,22 +1,41 @@
 # Pings the Render gateway every 10 min to keep the free-tier service warm.
-# Enable this only during the demo window -- otherwise it consumes Render's
-# free instance-hours unnecessarily.
 #
-# To use a different gateway URL, edit the curl line below or override
-# secrets.GATEWAY_HEALTH_URL in GitHub repo settings.
+# WINDOW: this workflow auto-disables itself after WARMUP_UNTIL_UTC -- after
+# that date the job exits early without making the curl, so Render services
+# go back to sleeping. Adjust WARMUP_UNTIL_UTC below to extend or shorten.
+#
+# CUSTOM URL: override with repo secret GATEWAY_HEALTH_URL if your Render
+# blueprint uses a different service name.
 name: render-warmup
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes (GH delays it 5-15 min in practice)
+    - cron: "*/10 * * * *"   # every 10 minutes (GH actually delays 5-15 min)
   workflow_dispatch:
+
+env:
+  # Inclusive end-of-day UTC. Ping skips automatically after this date.
+  WARMUP_UNTIL_UTC: "2026-05-29"
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
+      - name: Check warmup window
+        id: window
+        run: |
+          today=$(date -u +%F)
+          if [[ "$today" > "$WARMUP_UNTIL_UTC" ]]; then
+            echo "today ($today) is past WARMUP_UNTIL_UTC ($WARMUP_UNTIL_UTC) -- skipping ping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "today ($today) is within warmup window (ends $WARMUP_UNTIL_UTC)"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Ping gateway /health
+        if: steps.window.outputs.skip == 'false'
         env:
           URL: ${{ secrets.GATEWAY_HEALTH_URL || 'https://hbs-gateway.onrender.com/health' }}
         run: |

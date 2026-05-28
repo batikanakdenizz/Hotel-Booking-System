@@ -581,11 +581,11 @@ High-level:
 | Create the Cloud Scheduler nightly job | GCP console | 5 min |
 
 <p align="center">
-  <img src="docs/screenshots/image-1.png" alt="Render deployment dashboard" width="900" />
+  <img src="docs/screenshots/Render_Dashboard.png" alt="Render deployment dashboard" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/image-2.png" alt="Vercel deployment dashboard" width="900" />
+  <img src="docs/screenshots/Vercel_Dashboard.png" alt="Vercel deployment dashboard" width="900" />
 </p>
 
 ---

@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "stayfinder-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Stayfinder — React/Vite + TypeScript frontend for the SE 4458 Hotel Booking System.",
   "type": "module",
   "scripts": {
     "dev": "vite",

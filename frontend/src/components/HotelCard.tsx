@@ -21,7 +21,7 @@ export function HotelCard({ hotel, searchQuery }: HotelCardProps) {
   return (
     <Link
       to={`/hotels/${hotel.hotel_id}?${searchQuery}`}
-      className="group flex flex-col md:flex-row gap-4 bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg transition-shadow"
+      className="group flex flex-col md:flex-row gap-4 bg-white rounded-2xl shadow-card overflow-hidden transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-card-lg"
     >
       <div className="md:w-72 md:flex-shrink-0 aspect-[4/3] md:aspect-auto overflow-hidden">
         <img

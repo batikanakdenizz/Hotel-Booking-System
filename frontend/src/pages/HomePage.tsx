@@ -23,7 +23,16 @@ export default function HomePage() {
           className="absolute inset-0 bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay"
+        {/* Radial spotlight to draw attention to the centered headline */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 50% 25%, rgba(255,255,255,0.18), transparent 70%)",
+          }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 opacity-25 mix-blend-overlay"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=70')",
@@ -32,9 +41,15 @@ export default function HomePage() {
           }}
           aria-hidden="true"
         />
-        <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-32 text-center text-white">
+        <div className="absolute inset-0 grain-overlay" aria-hidden="true" />
+        {/* Subtle vignette at the bottom edge */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-slate-50/40"
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-32 text-center text-white animate-fade-in-up">
           <p className="text-sm uppercase tracking-[0.3em] text-brand-100/90">Stayfinder</p>
-          <h1 className="mt-3 text-4xl md:text-6xl font-bold leading-tight">
+          <h1 className="mt-3 text-4xl md:text-6xl font-bold leading-tight tracking-tight">
             Find your next stay,<br className="hidden md:block" /> from city breaks to weekend escapes.
           </h1>
           <p className="mt-4 text-lg text-brand-100/90 max-w-2xl mx-auto">
@@ -59,7 +74,7 @@ export default function HomePage() {
             <Link
               key={d.name}
               to={`/search?destination=${encodeURIComponent(d.name)}&check_in=${todayISO(1)}&check_out=${todayISO(3)}&guests=2`}
-              className="group relative overflow-hidden rounded-2xl shadow-card aspect-[4/5]"
+              className="group relative overflow-hidden rounded-2xl shadow-card aspect-[4/5] transition-all duration-300 hover:-translate-y-1 hover:shadow-card-lg"
             >
               <img
                 src={d.image}
@@ -110,7 +125,7 @@ export default function HomePage() {
 
 function Value({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="bg-white rounded-2xl shadow-card p-6 flex flex-col items-start">
+    <div className="bg-white rounded-2xl shadow-card p-6 flex flex-col items-start transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-md">
       <div className="rounded-xl bg-slate-100 p-3">{icon}</div>
       <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
       <p className="mt-1 text-sm text-slate-500">{text}</p>

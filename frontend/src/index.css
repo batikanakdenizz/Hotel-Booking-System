@@ -1,5 +1,6 @@
 /* @imports MUST come before Tailwind directives per CSS spec. */
 @import url("https://rsms.me/inter/inter.css");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -24,8 +25,8 @@ h1, h2, h3, h4 {
 
 /* Selection color matches brand. */
 ::selection {
-  background-color: rgba(36, 102, 197, 0.18);
-  color: #06152e;
+  background-color: rgba(201, 169, 110, 0.30);
+  color: #080f1a;
 }
 
 /* Subtle scrollbar */
@@ -35,7 +36,7 @@ h1, h2, h3, h4 {
 
 /* Accessible focus ring: only on keyboard navigation, not mouse clicks. */
 :focus-visible {
-  outline: 2px solid #2466c5;
+  outline: 2px solid #344e6c;
   outline-offset: 2px;
   border-radius: 6px;
 }

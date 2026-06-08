@@ -5,44 +5,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Refined navy + warm coral. Slightly more saturated, less "primary blue".
+        // Editorial luxury: deep midnight navy primary + warm champagne gold accent.
+        // Inspired by boutique hotel branding (Aman, Six Senses, Park Hyatt).
         brand: {
-          50:  "#eef4fc",
-          100: "#d8e6f7",
-          200: "#abc7ec",
-          300: "#7ba6de",
-          400: "#4d86d1",
-          500: "#2466c5",
-          600: "#1b51a3",
-          700: "#143e7e",
-          800: "#0d2956",
-          900: "#06152e",
+          50:  "#eef2f7",
+          100: "#d6dfeb",
+          200: "#aebed1",
+          300: "#7d96b3",
+          400: "#516f93",
+          500: "#344e6c",
+          600: "#243a55",
+          700: "#192a3f",
+          800: "#101c2c",
+          900: "#080f1a",
         },
         accent: {
-          DEFAULT: "#f4485a", // deeper, more saturated coral
-          dark:    "#d92d40",
+          DEFAULT: "#c9a96e", // champagne gold
+          dark:    "#a88b56",
         },
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "'Times New Roman'", "serif"],
       },
       boxShadow: {
-        card:      "0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.06)",
-        "card-md": "0 4px 10px rgba(15, 23, 42, 0.06), 0 12px 24px rgba(15, 23, 42, 0.08)",
-        "card-lg": "0 8px 16px rgba(15, 23, 42, 0.08), 0 24px 48px rgba(15, 23, 42, 0.12)",
-        glow:      "0 0 0 4px rgba(36, 102, 197, 0.18)",
+        card:      "0 1px 2px rgba(8, 15, 26, 0.05), 0 4px 14px rgba(8, 15, 26, 0.07)",
+        "card-md": "0 4px 10px rgba(8, 15, 26, 0.07), 0 14px 28px rgba(8, 15, 26, 0.10)",
+        "card-lg": "0 8px 20px rgba(8, 15, 26, 0.10), 0 28px 56px rgba(8, 15, 26, 0.14)",
+        glow:      "0 0 0 4px rgba(52, 78, 108, 0.18)",
+        "glow-accent": "0 0 0 4px rgba(201, 169, 110, 0.30)",
       },
       borderRadius: {
         "4xl": "2rem",
       },
       keyframes: {
         "fade-in-up": {
-          "0%":   { opacity: "0", transform: "translateY(8px)" },
+          "0%":   { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          "0%":   { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "subtle-zoom": {
+          "0%":   { transform: "scale(1)" },
+          "100%": { transform: "scale(1.06)" },
         },
       },
       animation: {
-        "fade-in-up": "fade-in-up 0.4s ease-out both",
+        "fade-in-up": "fade-in-up 0.6s ease-out both",
+        "fade-in":    "fade-in 0.8s ease-out both",
+        "subtle-zoom": "subtle-zoom 18s ease-out both",
       },
     },
   },

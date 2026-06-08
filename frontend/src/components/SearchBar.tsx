@@ -117,7 +117,7 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
           className="w-full bg-transparent text-sm font-medium focus:outline-none"
         />
       </Field>
-      <Button type="submit" variant="accent" size="lg" className="md:w-auto w-full">
+      <Button type="submit" variant="primary" size="lg" className="md:w-auto w-full">
         <Search className="h-5 w-5" /> Search
       </Button>
     </form>

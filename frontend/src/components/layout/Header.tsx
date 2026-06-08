@@ -8,9 +8,9 @@ export function Header() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-200/70">
+    <header className="sticky top-0 z-40 bg-ivory/85 backdrop-blur-md border-b border-brand-100/70">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 text-brand-700 font-bold tracking-tight">
+        <Link to="/" className="flex items-center gap-2 text-brand-900 font-bold tracking-tight">
           <Building2 className="h-6 w-6 text-accent" />
           <span className="text-lg font-serif italic">Stayfinder</span>
         </Link>

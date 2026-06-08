@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, Sparkles, MessageCircle, Building2 } from "lucide-react";
+import { ShieldCheck, Sparkles, MessageCircle, Building2, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 
 // Mirrors the cities seeded in scripts/seed_demo_data.py so every card returns
@@ -16,53 +16,65 @@ const FEATURED_DESTINATIONS = [
 
 export default function HomePage() {
   return (
-    <div className="bg-slate-50 min-h-[calc(100vh-4rem)]">
+    <div className="bg-ivory min-h-[calc(100vh-4rem)]">
       {/* Hero */}
-      <section className="relative overflow-hidden min-h-[78vh] flex flex-col justify-end">
+      <section className="relative overflow-hidden min-h-[82vh] flex flex-col justify-end">
         {/* Cinematic full-bleed background with subtle Ken Burns zoom */}
         <div
           className="absolute inset-0 animate-subtle-zoom"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=80')",
+              "url('https://images.unsplash.com/photo-1570213489059-0aac6626cade?auto=format&fit=crop&w=2400&q=85')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
           aria-hidden="true"
         />
-        {/* Layered darkening so the headline always reads, regardless of photo */}
+        {/* Cinematic darkening: warm shadow on top, deeper at bottom for text legibility */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-brand-900/70 via-brand-900/45 to-brand-900/85"
+          className="absolute inset-0 bg-gradient-to-b from-brand-900/55 via-brand-900/25 to-brand-900/85"
           aria-hidden="true"
         />
+        {/* Champagne-gold radial spotlight behind the headline */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 70% 50% at 50% 35%, rgba(201,169,110,0.18), transparent 65%)",
+              "radial-gradient(ellipse 80% 55% at 50% 45%, rgba(201,169,110,0.22), transparent 65%)",
           }}
           aria-hidden="true"
         />
         <div className="absolute inset-0 grain-overlay" aria-hidden="true" />
         {/* Soft fade into the page background at the bottom edge */}
         <div
-          className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-slate-50"
+          className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-ivory"
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto max-w-6xl px-4 pt-24 pb-40 text-center text-white animate-fade-in-up">
-          <p className="text-xs md:text-sm uppercase tracking-[0.4em] text-accent/90 font-semibold">
-            — Stayfinder —
-          </p>
-          <h1 className="mt-5 text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight">
+        <div className="relative mx-auto max-w-6xl px-4 pt-28 pb-40 text-center text-white animate-fade-in-up">
+          {/* Gold hairline accents around the eyebrow text */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-10 bg-accent/70" />
+            <p className="text-xs md:text-sm uppercase tracking-[0.45em] text-accent font-semibold">
+              Stayfinder
+            </p>
+            <span className="h-px w-10 bg-accent/70" />
+          </div>
+          <h1 className="mt-6 text-5xl md:text-7xl font-bold leading-[1.02] tracking-tight">
             Find your next{" "}
-            <span className="font-serif italic font-medium text-accent">escape</span>,
+            <span className="font-serif italic font-medium text-accent-light">escape</span>,
             <br className="hidden md:block" />
             from city breaks to coastal retreats.
           </h1>
-          <p className="mt-6 text-base md:text-lg text-slate-200/90 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-7 text-base md:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
             Curated stays across the world's most loved destinations, with member discounts and an AI concierge that books for you.
           </p>
+        </div>
+
+        {/* Floating scroll indicator */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-white/70 animate-fade-in pointer-events-none">
+          <ChevronDown className="h-6 w-6 mx-auto animate-bounce-soft" />
+          <p className="mt-1 text-[10px] uppercase tracking-[0.3em]">Explore</p>
         </div>
       </section>
 
@@ -78,10 +90,10 @@ export default function HomePage() {
         <div className="flex items-end justify-between gap-4 mb-2">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-accent-dark font-semibold">Destinations</p>
-            <h2 className="mt-2 text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+            <h2 className="mt-2 text-3xl md:text-4xl font-bold text-brand-900 tracking-tight">
               Where to <span className="font-serif italic font-medium">next</span>?
             </h2>
-            <p className="mt-2 text-slate-500 max-w-xl">Hand-picked cities worth exploring this season — from Aegean coastlines to Pacific skylines.</p>
+            <p className="mt-3 text-brand-500 max-w-xl">Hand-picked cities worth exploring this season — from Aegean coastlines to Pacific skylines.</p>
           </div>
         </div>
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -145,10 +157,10 @@ export default function HomePage() {
 
 function Value({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="group bg-white rounded-2xl shadow-card p-7 flex flex-col items-start transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-md border border-slate-100">
+    <div className="group bg-white rounded-2xl shadow-card p-7 flex flex-col items-start transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-md border border-brand-100">
       <div className="rounded-xl bg-accent/10 p-3 ring-1 ring-accent/20 transition-colors group-hover:bg-accent/15">{icon}</div>
-      <h3 className="mt-5 font-semibold text-slate-900 text-lg tracking-tight">{title}</h3>
-      <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">{text}</p>
+      <h3 className="mt-5 font-semibold text-brand-900 text-lg tracking-tight">{title}</h3>
+      <p className="mt-1.5 text-sm text-brand-500 leading-relaxed">{text}</p>
     </div>
   );
 }

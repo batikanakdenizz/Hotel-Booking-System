@@ -86,8 +86,8 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
       onSubmit={handleSubmit(onSubmit)}
       className={
         isHero
-          ? "bg-white shadow-card rounded-2xl p-3 md:p-2 grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto] gap-2 items-stretch"
-          : "bg-white border border-slate-200 rounded-xl p-2 grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto] gap-2 items-stretch"
+          ? "bg-white shadow-card-md rounded-2xl p-3 md:p-2 grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto] gap-2 items-stretch ring-1 ring-accent/15"
+          : "bg-white border border-brand-100 rounded-xl p-2 grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto] gap-2 items-stretch"
       }
     >
       <Controller
@@ -117,7 +117,7 @@ export function SearchBar({ initial, variant = "hero" }: SearchBarProps) {
           className="w-full bg-transparent text-sm font-medium focus:outline-none"
         />
       </Field>
-      <Button type="submit" variant="accent" size="lg" className="md:w-auto w-full">
+      <Button type="submit" variant="primary" size="lg" className="md:w-auto w-full">
         <Search className="h-5 w-5" /> Search
       </Button>
     </form>

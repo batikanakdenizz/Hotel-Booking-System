@@ -774,30 +774,6 @@ All fixed as of commit [`3824e87`](https://github.com/batikanakdenizz/Hotel-Book
 
 ---
 
-## Demo video
-
-<div align="center">
-
-[![Watch the demo](https://img.shields.io/badge/▶_Watch_the_5--minute_demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/OdYu_x2EO3o)
-
-</div>
-
-The walkthrough covers:
-
-1. Live URL + architecture overview (30 s)
-2. Search → results + map → hotel detail (60 s)
-3. Sign-up → booking → My Bookings → email confirmation via Brevo (60 s)
-4. Comments + 5-dimension Recharts distribution (60 s)
-5. AI chat: natural-language search + book against the Groq Llama 3.3
-   tool-calling loop (60 s)
-6. Admin panel + brief peek at Render + Cloud Scheduler (30 s)
-
-> The shot-by-shot recording script + 29-test pre-recording rehearsal
-> live in [`TestScenerio.md`](TestScenerio.md) and
-> [`demovideooutline.md`](demovideooutline.md).
-
----
-
 ## Acknowledgements
 
 - **Render · Vercel** for the free hosting tier that makes student

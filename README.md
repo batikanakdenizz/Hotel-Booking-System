@@ -15,9 +15,6 @@
   <a href="https://hbs-gateway.onrender.com/health">
     <img src="https://img.shields.io/badge/API_gateway-Healthy-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API gateway" />
   </a>
-  <a href="https://youtu.be/OdYu_x2EO3o">
-    <img src="https://img.shields.io/badge/Demo_video-Watch-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo video" />
-  </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-1f6feb?style=for-the-badge" alt="License" />
   </a>

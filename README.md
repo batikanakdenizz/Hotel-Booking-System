@@ -12,8 +12,8 @@
   <a href="https://hotel-booking-system-psi-beryl.vercel.app">
     <img src="https://img.shields.io/badge/Live_app-Open-22c55e?style=for-the-badge&logo=vercel&logoColor=white" alt="Live app" />
   </a>
-  <a href="https://hbs-gateway.onrender.com/health">
-    <img src="https://img.shields.io/badge/API_gateway-Healthy-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API gateway" />
+  <a href="https://hbs-gateway.onrender.com/docs">
+    <img src="https://img.shields.io/badge/API_gateway-Swagger_docs-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API gateway Swagger docs" />
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-1f6feb?style=for-the-badge" alt="License" />
@@ -79,10 +79,12 @@
 </table>
 
 > [!NOTE]
-> The backend runs on **Render's free tier**. A GitHub Actions matrix pings
-> every service every 10 minutes (auto-disables on 2026-05-29) so the
-> first click during the grading window is instant. After that date the
-> first request takes ~30 s to wake the containers.
+> The backend runs on **Render's free tier**, which puts a service to sleep
+> after 15 minutes of idle. Expect the first request to take **~30–60 s**
+> while the containers wake — after that it is fast. To warm all seven
+> services up front (before a demo, say), run the
+> [`render-warmup`](.github/workflows/warmup.yml) workflow:
+> `gh workflow run warmup.yml`.
 
 **Try it now:** open the [live app](https://hotel-booking-system-psi-beryl.vercel.app),
 search for **Istanbul** with future dates, click any hotel, and try the
@@ -142,7 +144,7 @@ Google Cloud Scheduler hits `notification-service` nightly at 02:00 Europe/Istan
 
 ## Contents
 
-[Demo](#demo) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [Data models](#data-models) · [API surface](#api-surface) · [Project structure](#project-structure) · [Local development](#local-development) · [Production deployment](#production-deployment) · [Verification scripts](#verification-scripts) · [Design decisions](#design-decisions) · [Assumptions](#assumptions) · [Issues encountered](#issues-encountered) · [Demo video](#demo-video) · [License](#license)
+[Demo](#demo) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [Data models](#data-models) · [API surface](#api-surface) · [Project structure](#project-structure) · [Local development](#local-development) · [Production deployment](#production-deployment) · [Verification scripts](#verification-scripts) · [Design decisions](#design-decisions) · [Assumptions](#assumptions) · [Issues encountered](#issues-encountered) · [Acknowledgements](#acknowledgements) · [License](#license)
 
 ---
 
@@ -505,17 +507,20 @@ responses follow `{ items: T[], page: int, limit: int, total: int }`.
 ```
 Hotel-Booking-System/
 ├── README.md
+├── LICENSE
 ├── .env.example                ← every env var documented here
 ├── docs/
 │   ├── ARCHITECTURE.md         ← sequence diagrams, decision log
 │   ├── DEPLOY.md               ← step-by-step Render + Vercel
 │   ├── SCHEDULING.md           ← Cloud Scheduler + warmup setup
+│   ├── TEST_SCENARIOS.md       ← manual end-to-end walkthrough
+│   ├── DEMO_VIDEO.md           ← scene-by-scene demo script
 │   └── Plan/                   ← original implementation plan (TR + EN)
 ├── infrastructure/
-│   ├── docker-compose.yml      ← local 7-service stack (optional)
+│   ├── docker-compose.yml      ← local 7-service stack
 │   └── render.yaml             ← one-click Render Blueprint
 ├── .github/workflows/
-│   └── warmup.yml              ← 10-min ping matrix, auto-disables 2026-05-29
+│   └── warmup.yml              ← manual ping matrix, wakes all 7 services
 ├── frontend/                   ← React 19 + Vite + TS SPA
 │   ├── vercel.json             ← SPA rewrite for React Router
 │   ├── tailwind.config.js
@@ -555,17 +560,46 @@ Hotel-Booking-System/
 
 ## Local development
 
-> Tested with Python 3.12 / 3.13, Node 20+, PowerShell 5.1 on Windows 11.
-> Same commands work on macOS/Linux with minor path tweaks.
+Two ways to bring the backend up: **Docker**, which works anywhere, or the
+**native** path the project was developed against (Python 3.12 / 3.13,
+Node 20+, PowerShell 5.1 on Windows 11).
 
-**1. Clone and configure**
+Both need real **Firebase**, **Groq** and **Brevo** credentials in `.env` —
+those are external SaaS with no local substitute, and services fail to start
+without them (`init_firebase_app` raises on a missing service account).
+
+**1. Clone and configure** — required either way
 
 ```bash
 git clone https://github.com/batikanakdenizz/Hotel-Booking-System.git
 cd Hotel-Booking-System
 cp .env.example .env
-# Fill in real values (Supabase URL, Firebase service account JSON, etc.)
+# Fill in real values (Firebase service account JSON, Groq key, Brevo key, …)
 ```
+
+### Option A — Docker (any OS)
+
+Brings up Postgres, MongoDB, Redis and RabbitMQ as containers alongside the
+seven services, so you don't need Supabase / Atlas / Upstash / CloudAMQP
+accounts — the compose file overrides those URLs to point at the local
+containers:
+
+```bash
+docker compose -f infrastructure/docker-compose.yml --env-file .env up --build
+```
+
+Gateway lands on `:8080`, domain services on `:8001`–`:8006`, RabbitMQ's
+management UI on `:15672` (guest/guest). The stack does **not** run migrations
+or seeds — do that from the host against the containerised Postgres, then skip
+to step 4:
+
+```bash
+POSTGRES_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/hotel_booking \
+  sh -c 'cd services/admin-service && alembic upgrade head && cd ../.. && \
+         python scripts/seed_demo_data.py && python scripts/seed_demo_comments.py'
+```
+
+### Option B — native (Windows / PowerShell)
 
 **2. Backend setup**
 
@@ -596,6 +630,10 @@ python scripts/seed_demo_comments.py
 ```
 
 This opens seven PowerShell windows, one per service.
+
+### Either option
+
+The frontend is not containerised, so it runs the same way in both cases.
 
 **4. Run the frontend**
 
@@ -745,9 +783,10 @@ Explicitly documented so a reviewer can challenge them:
 - **Email is sent from a Brevo-verified single sender** (a personal
   Gmail/Hotmail) so we can deliver to any recipient on the 300/day free
   tier without owning a domain.
-- **Render free-tier services sleep after 15 min** of idle. The warmup
-  GitHub Action runs only until 2026-05-29 so the project doesn't burn
-  free-tier instance hours indefinitely.
+- **Render free-tier services sleep after 15 min** of idle, so the first
+  request pays a cold start. The warmup GitHub Action is manual rather than
+  scheduled, so the project doesn't burn free-tier instance hours keeping
+  seven containers awake around the clock.
 
 ---
 

@@ -168,7 +168,7 @@ diagramına in.
 > exchange, persistent message ve `tenacity` ile 3 retry'lı
 > exponential backoff.
 >
-> Bu event'i notification-service consumer olarak dinliyor ve Resend
+> Bu event'i notification-service consumer olarak dinliyor ve Brevo
 > üzerinden onay maili gönderiyor. My Bookings sayfasında booking
 > hemen göründü, Confirmed rozeti yeşil, toplam fiyat doğru
 > hesaplanmış.
@@ -253,7 +253,7 @@ diagramına in.
 - [ ] Linki kopyala
 - [ ] README'de **"Demo video"** satırındaki `_link to be added after recording_`
       kısmını YouTube linkiyle değiştir
-- [ ] Aynı linki **TestScenerio.md**'nin de altına ekleyebilirsin (referans için)
+- [ ] Aynı linki **docs/TEST_SCENARIOS.md**'nin de altına ekleyebilirsin (referans için)
 - [ ] Commit + push:
   ```bash
   git add README.md

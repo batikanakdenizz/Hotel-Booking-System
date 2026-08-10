@@ -1,13 +1,15 @@
 # Scheduling Guide — Cron Jobs & Cold-Start Mitigation
 
-The system has two recurring jobs:
+The system has two scheduled jobs:
 
-1. **Nightly low-availability check** (business logic) — every day at 02:00 UTC
-2. **Warmup pings** (cold-start mitigation) — every 10 min during the demo window
+1. **Nightly low-availability check** (business logic) — every day at 02:00 UTC,
+   on Google Cloud Scheduler
+2. **Warmup pings** (cold-start mitigation) — run by hand before a demo
 
 Render's free plan sleeps services after 15 min idle and takes ~30s to wake.
-For a demo / portfolio site this is acceptable, but the warmup pings keep the
-gateway warm enough that the first click does not feel broken.
+For a demo / portfolio site this is acceptable, and running the warmup right
+before a presentation keeps the first click from feeling broken. It is
+deliberately not on a cron — see §2.3 for the instance-hour budget.
 
 ---
 
@@ -109,29 +111,22 @@ services sleep.
 
 ---
 
-## 3. Alternative: GitHub Actions (no third-party signup)
+## 3. What this repo actually ships: GitHub Actions (no third-party signup)
 
-If you do not want a cron-job.org account, you can run warmup pings as a
-GitHub Action. Create `.github/workflows/warmup.yml`:
+Section 2 describes cron-job.org as an option. This repo does not use it —
+warmup lives in [`.github/workflows/warmup.yml`](../.github/workflows/warmup.yml),
+which pings all seven `/health` endpoints as a matrix. Trigger it from the
+Actions tab or from the terminal:
 
-```yaml
-name: Render warmup ping
-on:
-  schedule:
-    - cron: "*/10 * * * *"   # every 10 min
-  workflow_dispatch:
-
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ping gateway
-        run: curl -fsS https://hbs-gateway.onrender.com/health
+```bash
+gh workflow run warmup.yml -R batikanakdenizz/Hotel-Booking-System
 ```
 
-GitHub Actions cron has ~5-15 min scheduling delay, so 10-min cadence is the
-practical floor. The schedule is also disabled automatically if the repo has
-been inactive for 60 days — fine for a demo, not for production.
+It is `workflow_dispatch`-only on purpose. A `*/10` schedule would keep seven
+services awake around the clock and blow the 750 instance-hour budget from
+§2.3; GitHub's cron also drifts 5–15 min under load and switches itself off
+after 60 days of repo inactivity, so it is not something to rely on unattended
+anyway.
 
 ---
 

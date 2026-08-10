@@ -262,9 +262,9 @@ averages plus a `$bucket` histogram in a single Mongo round-trip per hotel.
   Slimmed `shared.auth/__init__.py` and `shared.clients/__init__.py` so a
   service that only needs Mongo doesn't drag in postgres deps. SQLAlchemy
   imports inside `shared.auth.deps` were moved to function scope.
-- **Cold-start UX on Render free tier**. Mitigated with a GitHub Actions
-  matrix that hits every service's `/health` every 10 min during the demo
-  window (see `docs/SCHEDULING.md`).
+- **Cold-start UX on Render free tier**. Mitigated with a manually triggered
+  GitHub Actions matrix that hits every service's `/health` before a demo
+  (see `docs/SCHEDULING.md`).
 - **Leaflet tile grid fragmenting** when the map mounts inside a sticky
   sidebar. Fixed with a `useEffect` that calls `map.invalidateSize()` on
   mount and on every container resize.
@@ -284,6 +284,6 @@ averages plus a `$bucket` histogram in a single Mongo round-trip per hotel.
 | Email | Brevo (transactional) | Verified single-sender Gmail/Hotmail, 300/day free |
 | Auth | Firebase | Web SDK + Admin SDK |
 | Scheduler | Google Cloud Scheduler | Nightly `POST /trigger/nightly` |
-| Warmup | GitHub Actions | 10-min ping matrix, auto-disables 2026-05-29 |
+| Warmup | GitHub Actions | Manual ping matrix (`workflow_dispatch`), wakes all 7 |
 
 Full step-by-step: [`docs/DEPLOY.md`](DEPLOY.md) + [`docs/SCHEDULING.md`](SCHEDULING.md).

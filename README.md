@@ -144,7 +144,7 @@ Google Cloud Scheduler hits `notification-service` nightly at 02:00 Europe/Istan
 
 ## Contents
 
-[Demo](#demo) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [Data models](#data-models) · [API surface](#api-surface) · [Project structure](#project-structure) · [Local development](#local-development) · [Production deployment](#production-deployment) · [Verification scripts](#verification-scripts) · [Design decisions](#design-decisions) · [Assumptions](#assumptions) · [Issues encountered](#issues-encountered) · [Demo video](#demo-video) · [License](#license)
+[Demo](#demo) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [Data models](#data-models) · [API surface](#api-surface) · [Project structure](#project-structure) · [Local development](#local-development) · [Production deployment](#production-deployment) · [Verification scripts](#verification-scripts) · [Design decisions](#design-decisions) · [Assumptions](#assumptions) · [Issues encountered](#issues-encountered) · [Acknowledgements](#acknowledgements) · [License](#license)
 
 ---
 

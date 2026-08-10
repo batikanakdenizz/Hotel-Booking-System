@@ -507,14 +507,17 @@ responses follow `{ items: T[], page: int, limit: int, total: int }`.
 ```
 Hotel-Booking-System/
 ├── README.md
+├── LICENSE
 ├── .env.example                ← every env var documented here
 ├── docs/
 │   ├── ARCHITECTURE.md         ← sequence diagrams, decision log
 │   ├── DEPLOY.md               ← step-by-step Render + Vercel
 │   ├── SCHEDULING.md           ← Cloud Scheduler + warmup setup
+│   ├── TEST_SCENARIOS.md       ← manual end-to-end walkthrough
+│   ├── DEMO_VIDEO.md           ← scene-by-scene demo script
 │   └── Plan/                   ← original implementation plan (TR + EN)
 ├── infrastructure/
-│   ├── docker-compose.yml      ← local 7-service stack (optional)
+│   ├── docker-compose.yml      ← local 7-service stack
 │   └── render.yaml             ← one-click Render Blueprint
 ├── .github/workflows/
 │   └── warmup.yml              ← 10-min ping matrix, auto-disables 2026-05-29

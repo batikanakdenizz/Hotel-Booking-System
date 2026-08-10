@@ -783,9 +783,10 @@ Explicitly documented so a reviewer can challenge them:
 - **Email is sent from a Brevo-verified single sender** (a personal
   Gmail/Hotmail) so we can deliver to any recipient on the 300/day free
   tier without owning a domain.
-- **Render free-tier services sleep after 15 min** of idle. The warmup
-  GitHub Action runs only until 2026-05-29 so the project doesn't burn
-  free-tier instance hours indefinitely.
+- **Render free-tier services sleep after 15 min** of idle, so the first
+  request pays a cold start. The warmup GitHub Action is manual rather than
+  scheduled, so the project doesn't burn free-tier instance hours keeping
+  seven containers awake around the clock.
 
 ---
 

@@ -168,7 +168,7 @@ diagramına in.
 > exchange, persistent message ve `tenacity` ile 3 retry'lı
 > exponential backoff.
 >
-> Bu event'i notification-service consumer olarak dinliyor ve Resend
+> Bu event'i notification-service consumer olarak dinliyor ve Brevo
 > üzerinden onay maili gönderiyor. My Bookings sayfasında booking
 > hemen göründü, Confirmed rozeti yeşil, toplam fiyat doğru
 > hesaplanmış.

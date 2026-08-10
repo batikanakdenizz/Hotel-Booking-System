@@ -12,8 +12,8 @@
   <a href="https://hotel-booking-system-psi-beryl.vercel.app">
     <img src="https://img.shields.io/badge/Live_app-Open-22c55e?style=for-the-badge&logo=vercel&logoColor=white" alt="Live app" />
   </a>
-  <a href="https://hbs-gateway.onrender.com/health">
-    <img src="https://img.shields.io/badge/API_gateway-Healthy-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API gateway" />
+  <a href="https://hbs-gateway.onrender.com/docs">
+    <img src="https://img.shields.io/badge/API_gateway-Swagger_docs-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API gateway Swagger docs" />
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-1f6feb?style=for-the-badge" alt="License" />
@@ -79,10 +79,12 @@
 </table>
 
 > [!NOTE]
-> The backend runs on **Render's free tier**. A GitHub Actions matrix pings
-> every service every 10 minutes (auto-disables on 2026-05-29) so the
-> first click during the grading window is instant. After that date the
-> first request takes ~30 s to wake the containers.
+> The backend runs on **Render's free tier**, which puts a service to sleep
+> after 15 minutes of idle. Expect the first request to take **~30–60 s**
+> while the containers wake — after that it is fast. To warm all seven
+> services up front (before a demo, say), run the
+> [`render-warmup`](.github/workflows/warmup.yml) workflow:
+> `gh workflow run warmup.yml`.
 
 **Try it now:** open the [live app](https://hotel-booking-system-psi-beryl.vercel.app),
 search for **Istanbul** with future dates, click any hotel, and try the

@@ -520,7 +520,7 @@ Hotel-Booking-System/
 │   ├── docker-compose.yml      ← local 7-service stack
 │   └── render.yaml             ← one-click Render Blueprint
 ├── .github/workflows/
-│   └── warmup.yml              ← 10-min ping matrix, auto-disables 2026-05-29
+│   └── warmup.yml              ← manual ping matrix, wakes all 7 services
 ├── frontend/                   ← React 19 + Vite + TS SPA
 │   ├── vercel.json             ← SPA rewrite for React Router
 │   ├── tailwind.config.js

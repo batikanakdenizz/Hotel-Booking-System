@@ -253,7 +253,7 @@ diagramına in.
 - [ ] Linki kopyala
 - [ ] README'de **"Demo video"** satırındaki `_link to be added after recording_`
       kısmını YouTube linkiyle değiştir
-- [ ] Aynı linki **TestScenerio.md**'nin de altına ekleyebilirsin (referans için)
+- [ ] Aynı linki **docs/TEST_SCENARIOS.md**'nin de altına ekleyebilirsin (referans için)
 - [ ] Commit + push:
   ```bash
   git add README.md

@@ -1,10 +1,13 @@
-# Pings every Render service every 10 min to keep the free-tier containers
-# from sleeping (Render spins free services down after 15 min idle).
+# Wakes every Render service on demand (Render spins free services down
+# after 15 min idle, and a cold start costs ~30 s).
 #
-# WINDOW: this workflow auto-disables itself after WARMUP_UNTIL_UTC -- after
-# that date the job exits early without making any curls, so Render services
-# go back to sleeping on the free tier. Adjust WARMUP_UNTIL_UTC below to
-# extend or shorten.
+# MANUAL ONLY: this used to run on a */10 cron behind a WARMUP_UNTIL_UTC
+# kill-date. That date passed, so every cron tick just spawned seven jobs
+# that evaluated the date and exited -- no warmup, only burnt Actions
+# minutes. The cron and the date gate are both gone; run this yourself
+# before a demo or a grading session:
+#
+#     gh workflow run warmup.yml -R batikanakdenizz/Hotel-Booking-System
 #
 # Why ping every service: pinging only the gateway wakes the gateway but
 # leaves search-service / booking-service / etc. asleep. The first real user
@@ -13,12 +16,7 @@
 name: render-warmup
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"   # GH actually fires this every 10-25 min during peak load
   workflow_dispatch:
-
-env:
-  WARMUP_UNTIL_UTC: "2026-05-29"
 
 jobs:
   ping:
@@ -36,20 +34,7 @@ jobs:
           - hbs-notification-service
           - hbs-ai-agent-service
     steps:
-      - name: Check warmup window
-        id: window
-        run: |
-          today=$(date -u +%F)
-          if [[ "$today" > "$WARMUP_UNTIL_UTC" ]]; then
-            echo "today ($today) is past WARMUP_UNTIL_UTC ($WARMUP_UNTIL_UTC) -- skipping ping"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "today ($today) is within warmup window (ends $WARMUP_UNTIL_UTC)"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Ping ${{ matrix.service }} /health
-        if: steps.window.outputs.skip == 'false'
         env:
           URL: https://${{ matrix.service }}.onrender.com/health
         run: |
